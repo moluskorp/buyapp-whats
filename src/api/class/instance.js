@@ -17,10 +17,13 @@ const downloadMessage = require('../helper/downloadMsg')
 const logger = require('pino')()
 const useMongoDBAuthState = require('../helper/mongoAuthState')
 
+
+const saveStats = require('../helper/saveStats');
+
 class WhatsAppInstance {
     socketConfig = {
         defaultQueryTimeoutMs: undefined,
-        printQRInTerminal: true,
+        printQRInTerminal: false,
         logger: pino({
             level: config.log.level,
         }),
@@ -278,21 +281,25 @@ class WhatsAppInstance {
                                 msg.message.imageMessage,
                                 'image'
                             )
+                            saveStats(this.key, 'image', 'received')  
                             break
                         case 'videoMessage':
                             webhookData['msgContent'] = await downloadMessage(
                                 msg.message.videoMessage,
                                 'video'
                             )
+                            saveStats(this.key, 'video', 'received')  
                             break
                         case 'audioMessage':
                             webhookData['msgContent'] = await downloadMessage(
                                 msg.message.audioMessage,
                                 'audio'
                             )
+                            saveStats(this.key, 'audio', 'received')  
                             break
                         default:
                             webhookData['msgContent'] = ''
+                            saveStats(this.key, 'text', 'received')  
                             break
                     }
                 }

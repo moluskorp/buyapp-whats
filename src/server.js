@@ -5,6 +5,7 @@ dotenv.config()
 
 const app = require('./config/express')
 const config = require('./config/config')
+const initDBStats = require('./api/db/db')
 
 const { Session } = require('./api/class/session')
 const connectToCluster = require('./api/helper/connectMongoClient')
@@ -17,6 +18,8 @@ if (config.mongoose.enabled) {
         logger.info('Connected to MongoDB')
     })
 }
+
+initDBStats()
 
 server = app.listen(config.port, async () => {
     logger.info(`Listening on port ${config.port}`)
