@@ -103,6 +103,24 @@ exports.delete = async (req, res) => {
     try {
         await WhatsAppInstances[req.query.key].deleteInstance(req.query.key)
         delete WhatsAppInstances[req.query.key]
+        
+        // Deletes user stats from 'sent_msgs' and 'received_msgs' tables
+        db.run('DELETE FROM sent_msgs WHERE user_key = ?', [req.query.key], function(err) {
+            if (err) {
+                console.error(err);
+                res.status(500).send('An error occurred while deleting the user sent messages statistics.');
+                return;
+            }
+        });
+
+        db.run('DELETE FROM received_msgs WHERE user_key = ?', [req.query.key], function(err) {
+            if (err) {
+                console.error(err);
+                res.status(500).send('An error occurred while deleting the user received messages statistics.');
+                return;
+            }
+        });
+        
     } catch (error) {
         errormsg = error
     }
@@ -112,6 +130,7 @@ exports.delete = async (req, res) => {
         data: errormsg ? errormsg : null,
     })
 }
+
 
 exports.list = async (req, res) => {
     if (req.query.active) {

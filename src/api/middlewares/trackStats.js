@@ -3,12 +3,12 @@ const saveStats = require('../helper/saveStats');
 
 function trackStats(req, res, next) {
     const userKey = req.query.key; 
-    const endpoint = req.path.substring(1); 
+    const messageType = req.path.substring(1); // 'video', 'text', 'audio', 'doc'
 
     logger.info(req.path)
-    logger.info(`Endpoint: ${endpoint}`)
+    logger.info(`MessageType: ${messageType}`)
 
-    saveStats(userKey, endpoint, 'sent')  
+    saveStats(userKey, messageType, 'sent')
         .then(() => {
             next();  
         })

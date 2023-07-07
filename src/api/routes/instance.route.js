@@ -20,25 +20,55 @@ router.route('/list').get(controller.list)
 router.get('/getstats', keyVerify, loginVerify, (req, res) => {
     const userKey = req.query.key; 
 
-    db.all('SELECT endpoint, upload_count, received_count FROM user_stats WHERE user_key = ?', [userKey], function(err, rows) {
+    // Consulta para buscar estatísticas de mensagens enviadas
+    db.get('SELECT text, image, audio, video, doc FROM sent_msgs WHERE user_key = ?', [userKey], function(err, row) {
         if (err) {
             console.error(err);
             res.status(500).send('Ocorreu um erro ao buscar as estatísticas.');
             return;
         }
 
+        // Inicializa todas as estatísticas enviadas com 0
         const stats = {
-            sent: {},
-            received: {}
+            sent: {
+                text: 0,
+                image: 0,
+                audio: 0,
+                video: 0,
+                doc: 0
+            },
+            received: {
+                text: 0,
+                image: 0,
+                audio: 0,
+                video: 0,
+                doc: 0
+            }
         };
-        for (let row of rows) {
-            stats.sent[row.endpoint] = row.upload_count;
-            stats.received[row.endpoint] = row.received_count;
+
+        // Atualiza as estatísticas enviadas com os valores do banco de dados
+        if (row) {
+            stats.sent = row;
         }
 
-        res.json(stats);
+        // Consulta para buscar estatísticas de mensagens recebidas
+        db.get('SELECT text, image, audio, video, doc FROM received_msgs WHERE user_key = ?', [userKey], function(err, row) {
+            if (err) {
+                console.error(err);
+                res.status(500).send('Ocorreu um erro ao buscar as estatísticas.');
+                return;
+            }
+
+            // Atualiza as estatísticas recebidas com os valores do banco de dados
+            if (row) {
+                stats.received = row;
+            }
+
+            res.json(stats);
+        });
     });
 });
+
 
 
 module.exports = router

@@ -281,25 +281,50 @@ class WhatsAppInstance {
                                 msg.message.imageMessage,
                                 'image'
                             )
-                            saveStats(this.key, 'image', 'received')  
+                            saveStats(this.key, 'image', 'received') 
+                            .then(() => {
+                                logger.info("Foi...")  
+                            })
+                            .catch(err => {
+                                console.error(err);
+                            });
+                            
                             break
                         case 'videoMessage':
                             webhookData['msgContent'] = await downloadMessage(
                                 msg.message.videoMessage,
                                 'video'
                             )
-                            saveStats(this.key, 'video', 'received')  
+                            saveStats(this.key, 'video', 'received')
+                            .then(() => {
+                                logger.info("Foi...")  
+                            })
+                            .catch(err => {
+                                console.error(err);
+                            });
                             break
                         case 'audioMessage':
                             webhookData['msgContent'] = await downloadMessage(
                                 msg.message.audioMessage,
                                 'audio'
                             )
-                            saveStats(this.key, 'audio', 'received')  
+                            saveStats(this.key, 'audio', 'received')
+                            .then(() => {
+                                logger.info("Foi...")  
+                            })
+                            .catch(err => {
+                                console.error(err);
+                            });  
                             break
                         default:
                             webhookData['msgContent'] = ''
-                            saveStats(this.key, 'text', 'received')  
+                            saveStats(this.key, 'text', 'received')
+                            .then(() => {
+                                logger.info("Foi...")  
+                            })
+                            .catch(err => {
+                                console.error(err);
+                            });  
                             break
                     }
                 }
