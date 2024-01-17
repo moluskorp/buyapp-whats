@@ -4,9 +4,8 @@ const pino = require('pino')
 const {
     default: makeWASocket,
     DisconnectReason,
-    downloadMediaMessage
 } = require('@whiskeysockets/baileys')
-const { unlinkSync, writeFileSync } = require('fs')
+const { unlinkSync } = require('fs')
 const { v4: uuidv4 } = require('uuid')
 const path = require('path')
 const processButton = require('../helper/processbtn')
@@ -20,7 +19,7 @@ const useMongoDBAuthState = require('../helper/mongoAuthState')
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp} = require('../helper/sendSupabase');
+const sendDataToSupabase = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -62,31 +61,7 @@ class WhatsAppInstance {
             })
         }
     }
-    async downloadMessageSup(sock, msg, extension) {
-        // download the message
-        const buffer = await downloadMediaMessage(
-            msg,
-            'buffer',
-            {},
-            {
-                logger,
-                // pass this so that baileys can request a reupload of media
-                // that has been deleted
-                reuploadRequest: sock?.updateMediaMessage
-            }
-        )
-        // save to file
-        const fileName = `${msg.key.id}.${extension}`;
-        const path = `${process.cwd()}/temp/${fileName}`;
-    
-        try {
-            writeFileSync(path, buffer); // Usa writeFileSync
-            console.log('Arquivo salvo com sucesso!');
-            await uploadSUp(path, fileName); // Chama a função corrigida de upload
-        } catch (err) {
-            console.error(err);
-        }
-    }
+
     async SendWebhook(type, body, key) {
         if (!this.allowWebhook) return
         this.axiosInstance
@@ -282,62 +257,8 @@ class WhatsAppInstance {
 
             m.messages.map(async (msg) => {
                 if (!msg.message) return
-		
-		const isGroupMessage = msg.key.remoteJid.endsWith('@g.us');
+
                 const messageType = Object.keys(msg.message)[0]
-
-                if (!isGroupMessage) {
-			if (msg.key.fromMe != true) { 
-                    const remoteJid = msg.key.remoteJid;
-                    let wppUser = remoteJid.split('@')[0];
-
-                    if (wppUser.includes('-')) {
-                        wppUser = wppUser.split('-')[0];
-                    }
-                    const idApi = uuidv4() 
-                    const userData = await adicionaRegistro(wppUser, this.key, idApi, msg.pushName)
-                    console.log(userData)
-                    const conversaId = userData[0].id_api;
-                    msg.key['conversaId'] = conversaId;
-			}
-
-                    let fileName;
-                    let fileUrl;
-                    let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
-                   console.log(msg);
-			switch (messageType) {
-                        case 'imageMessage':
-                            await this.downloadMessageSup(sock, msg, 'jpeg');
-                            
-                            fileUrl = `${bucketUrl}/${msg.key.id}.jpeg`
-                            msg.message['imageMessage']['url'] = fileUrl
-                            
-                            break;
-                        case 'videoMessage':
-                            await this.downloadMessageSup(sock, msg, 'mp4');
-                            
-                            fileUrl = `${bucketUrl}/${fileName}${msg.key.id}.mp4`
-                            msg.message['videoMessage']['url'] = fileUrl
-                            
-                            break;
-                        case 'audioMessage':
-                            await this.downloadMessageSup(sock, msg, 'mp3');
-                            
-                            fileUrl = `${bucketUrl}/${msg.key.id}.mp3`
-                            msg.message['audioMessage']['url'] = fileUrl
-                            
-                            break;
-                        case 'documentMessage':
-                            const format = `${msg.message['documentMessage']['mimetype'].split('/')[1]}`
-                            await this.downloadMessageSup(sock, msg, format)
-    
-                            fileUrl = `${bucketUrl}/${msg.key.id}.${format}`
-				console.log(fileUrl)
-                            msg.message['documentMessage']['url'] = fileUrl
-    
-                            break
-                    }
-                }
                 if (
                     [
                         'protocolMessage',

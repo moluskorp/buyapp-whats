@@ -7,6 +7,8 @@ function keyVerification(req, res, next) {
     }
     const instance = WhatsAppInstances[key]
     if (!instance) {
+	console.log("esse aqui e o key:")
+	console.log(key)
         return res
             .status(403)
             .send({ error: true, message: 'invalid key supplied' })
