@@ -11,9 +11,10 @@ const supabase = createClient( 'https://fntyzzstyetnbvrpqfre.supabase.co',
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function sendDataToSupabase(tableName, data) { try { await sleep(10000); 
-        const response = await supabase.from(tableName).insert([data]); if 
-        (response.error) {
+async function sendDataToSupabase(tableName, data) { 
+    try { 
+        const response = await supabase.from(tableName).insert([data]); 
+        if(response.error) {
             console.error('Error inserting data:', response.error);
         } else {
             console.log('Data inserted:', response.data);

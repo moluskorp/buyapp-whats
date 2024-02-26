@@ -1,4 +1,5 @@
 exports.Text = async (req, res) => {
+    console.log('entrou no controller text')
     const data = await WhatsAppInstances[req.query.key].sendTextMessage(
         req.body.id,
         req.body.message

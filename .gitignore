@@ -132,3 +132,6 @@ dist
 # outros
 temp/
 
+#Docker Local
+Dockerfile
+docker-compose.yml

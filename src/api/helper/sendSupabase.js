@@ -14,7 +14,6 @@ function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function sendDataToSupabase(tableName, data) {
-	console.log(data);
 	try {  
         const response = await supabase.from(tableName).insert([data]); if 
         (response.error) {
@@ -24,6 +23,36 @@ async function sendDataToSupabase(tableName, data) {
         }
     } catch (error) {
         console.error('An unexpected error occurred:', error);
+    }
+}
+async function fetchAllDataFromTable(tableName) {
+    try {
+        const {data, error} = await supabase.from(tableName).select('*');
+
+        if(error) {
+            console.error('Error fetching data:', error);
+        }else {
+            return data
+        }
+    }catch(error) {
+        console.error('An unexpected error occurred:', error);
+        return null
+    }
+}
+
+async function updateDataInTable(tableName, matchCriteria, newData) {
+    try {
+        const {data, error} = await supabase.from(tableName).update(newData).match(matchCriteria)
+
+        if(error) {
+            console.error('Error updating data:', error);
+            return null
+        } else {
+            return data
+        }
+    } catch(error) {
+        console.error('An unexpected error occurred:', error);
+        return null
     }
 }
 
@@ -87,10 +116,29 @@ async function uploadSUp(filePath, filename) {
 
 }
 
+async function deleteDataFromtable(tableName, matchCriteria) {
+    try {
+        const {data, error} = await supabase.from(tableName).delete().match(matchCriteria)
+
+        if (error) {
+            console.error('Error deleting data:', error);
+            return null;
+        } else {
+            return data;
+        }
+    }catch (error) {
+        console.error('An unexpected error occurred:', error);
+        return null;
+    }
+}
+
 
 module.exports = {
     sendDataToSupabase,
     adicionaRegistro,
-    uploadSUp
+    fetchAllDataFromTable,
+    updateDataInTable,
+    uploadSUp,
+    deleteDataFromtable
 };
 

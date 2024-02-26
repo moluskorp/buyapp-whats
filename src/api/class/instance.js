@@ -20,7 +20,7 @@ const useMongoDBAuthState = require('../helper/mongoAuthState')
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp} = require('../helper/sendSupabase');
+const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable} = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -34,6 +34,7 @@ class WhatsAppInstance {
     authState
     allowWebhook = undefined
     webhook = undefined
+    clientId = null
 
     instance = {
         key: this.key,
@@ -48,9 +49,10 @@ class WhatsAppInstance {
         baseURL: config.webhookUrl,
     })
 
-    constructor(key, allowWebhook, webhook) {
+    constructor(key, allowWebhook, webhook, clientId) {
         this.key = key ? key : uuidv4()
         this.instance.customWebhook = this.webhook ? this.webhook : webhook
+        this.clientId = clientId
         this.allowWebhook = config.webhookEnabled
             ? config.webhookEnabled
             : allowWebhook
@@ -61,6 +63,7 @@ class WhatsAppInstance {
                 baseURL: webhook,
             })
         }
+        
     }
     async downloadMessageSup(sock, msg, extension) {
         // download the message
@@ -117,8 +120,13 @@ class WhatsAppInstance {
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update
-
-            if (connection === 'connecting') return
+            //  TESTE MEU
+            if (connection === 'connecting'){
+                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'carregando'})
+                this.SendWebhook('connection', {
+                    teste: 'teste'
+                }, this.key)
+            }
 
             if (connection === 'close') {
                 // reconnect if not logged out
@@ -132,6 +140,8 @@ class WhatsAppInstance {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
+                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
+
                 }
 
                 if (
@@ -150,6 +160,7 @@ class WhatsAppInstance {
                         this.key
                     )
             } else if (connection === 'open') {
+                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
                 if (config.mongoose.enabled) {
                     let alreadyThere = await Chat.findOne({
                         key: this.key,
@@ -178,6 +189,9 @@ class WhatsAppInstance {
             }
 
             if (qr) {
+                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'qrCode', qrcode: qr})
+                const oi = await fetchAllDataFromTable('conexoes')
+                console.log({oi: oi[0]})
                 QRCode.toDataURL(qr).then((url) => {
                     this.instance.qr = url
                     this.instance.qrRetry++
@@ -219,8 +233,6 @@ class WhatsAppInstance {
 
         // on recive new chat
         sock?.ev.on('chats.upsert', (newChat) => {
-            //console.log('chats.upsert')
-            //console.log(newChat)
             const chats = newChat.map((chat) => {
                 return {
                     ...chat,
@@ -232,8 +244,6 @@ class WhatsAppInstance {
 
         // on chat change
         sock?.ev.on('chats.update', (changedChat) => {
-            //console.log('chats.update')
-            //console.log(changedChat)
             changedChat.map((chat) => {
                 const index = this.instance.chats.findIndex(
                     (pc) => pc.id === chat.id
@@ -248,8 +258,6 @@ class WhatsAppInstance {
 
         // on chat delete
         sock?.ev.on('chats.delete', (deletedChats) => {
-            //console.log('chats.delete')
-            //console.log(deletedChats)
             deletedChats.map((chat) => {
                 const index = this.instance.chats.findIndex(
                     (c) => c.id === chat
@@ -260,8 +268,6 @@ class WhatsAppInstance {
 
         // on new mssage
         sock?.ev.on('messages.upsert', async (m) => {
-            //console.log('messages.upsert')
-            //console.log(m)
             if (m.type === 'prepend')
                 this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
