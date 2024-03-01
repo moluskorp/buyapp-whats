@@ -189,12 +189,11 @@ class WhatsAppInstance {
             }
 
             if (qr) {
-                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'qrCode', qrcode: qr})
-                const oi = await fetchAllDataFromTable('conexoes')
-                console.log({oi: oi[0]})
+                
                 QRCode.toDataURL(qr).then((url) => {
                     this.instance.qr = url
                     this.instance.qrRetry++
+                    updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'qrCode', qrcode: url})
                     // if (this.instance.qrRetry >= config.instance.maxRetryQr) {
                     //     // close WebSocket connection
                     //     this.instance.sock.ws.close()
