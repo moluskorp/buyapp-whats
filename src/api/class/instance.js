@@ -27,7 +27,7 @@ class WhatsAppInstance {
         defaultQueryTimeoutMs: undefined,
         printQRInTerminal: false,
         logger: pino({
-            level: config.log.level,
+            level: 'silent',
         }),
     }
     key = ''
@@ -35,6 +35,10 @@ class WhatsAppInstance {
     allowWebhook = undefined
     webhook = undefined
     clientId = null
+    colabUserId = null
+    setoresId = null
+    botId = null
+    empresaId = null
 
     instance = {
         key: this.key,
@@ -49,10 +53,14 @@ class WhatsAppInstance {
         baseURL: config.webhookUrl,
     })
 
-    constructor(key, allowWebhook, webhook, clientId) {
+    constructor(key, allowWebhook, webhook, clientId, colabUserId, setoresId, botId, empresaId) {
         this.key = key ? key : uuidv4()
         this.instance.customWebhook = this.webhook ? this.webhook : webhook
         this.clientId = clientId
+        this.colabUserId = colabUserId
+        this.setoresId = setoresId
+        this.botId = botId
+        this.empresaId = empresaId
         this.allowWebhook = config.webhookEnabled
             ? config.webhookEnabled
             : allowWebhook
@@ -108,6 +116,7 @@ class WhatsAppInstance {
         this.socketConfig.auth = this.authState.state
         this.socketConfig.browser = Object.values(config.browser)
         this.instance.sock = makeWASocket(this.socketConfig)
+        
         this.setHandler()
         return this
     }
@@ -161,6 +170,11 @@ class WhatsAppInstance {
                     )
             } else if (connection === 'open') {
                 await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
+                await updateDataInTable('colab_user', {id: this.colabUserId}, {key_colabuser: this.key})
+                await updateDataInTable('Setores', {id: this.setoresId}, {key_conexao: this.key})
+                await updateDataInTable('Bot', {id: this.botId}, {'key_conexão': this.key})
+                await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
+
                 if (config.mongoose.enabled) {
                     let alreadyThere = await Chat.findOne({
                         key: this.key,
@@ -476,7 +490,7 @@ class WhatsAppInstance {
         })
 
         sock?.ev.on('groups.upsert', async (newChat) => {
-            //console.log('groups.upsert')
+            // console.log('groups.upsert ❌❌❌❌❌❌')
             //console.log(newChat)
             this.createGroupByApp(newChat)
             if (
@@ -494,8 +508,8 @@ class WhatsAppInstance {
         })
 
         sock?.ev.on('groups.update', async (newChat) => {
-            //console.log('groups.update')
-            //console.log(newChat)
+            console.log('groups.update ❌❌❌❌❌❌')
+            console.log(newChat)
             this.updateGroupSubjectByApp(newChat)
             if (
                 ['all', 'groups', 'groups.update'].some((e) =>
@@ -531,6 +545,7 @@ class WhatsAppInstance {
                     this.key
                 )
         })
+
     }
 
     async deleteInstance(key) {

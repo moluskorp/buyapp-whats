@@ -3,14 +3,21 @@ const fs = require('fs')
 const path = require('path')
 const config = require('../../config/config')
 const { Session } = require('../class/session')
+const { jidEncode, getChatId, jidDecode } = require('@whiskeysockets/baileys')
 
 exports.init = async (req, res) => {
     const key = req.query.key
+    const clientId = req.query.id
+    const colabUserId = req.query.colabUserId
+    const setoresId = req.query.setoresId
+    const botId = req.query.botId
+    const empresaId = req.query.empresaId
+
     const webhook = !req.query.webhook ? false : req.query.webhook
     const webhookUrl = !req.query.webhookUrl ? null : req.query.webhookUrl
-    const clientId = req.query.id
+
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
-    const instance = new WhatsAppInstance(key, webhook, webhookUrl, clientId)
+    const instance = new WhatsAppInstance(key, webhook, webhookUrl, clientId, colabUserId, setoresId, botId, empresaId)
     const data = await instance.init()
     WhatsAppInstances[data.key] = instance
     const qr = await WhatsAppInstances[req.query.key]?.instance.qr
@@ -61,15 +68,21 @@ exports.qrbase64 = async (req, res) => {
 exports.info = async (req, res) => {
     const instance = WhatsAppInstances[req.query.key]
     let data
+    let user
     try {
+        // console.log({instance: instance.instance.sock})
         data = await instance.getInstanceDetail(req.query.key)
+        const {id} = data.user
+        const status = await instance.instance.sock.fetchStatus(id)
+        user = status
+        console.log({user})
     } catch (error) {
         data = {}
     }
     return res.json({
         error: false,
         message: 'Instance fetched successfully',
-        instance_data: data,
+        instance_data: {data,user}
     })
 }
 
@@ -161,4 +174,35 @@ exports.list = async (req, res) => {
         message: 'All instance listed',
         data: data,
     })
+}
+
+exports.contactInfo = async(req, res) => {
+    const phone = req.query.number
+    const instance = WhatsAppInstances[req.query.key]
+    const {sock} = instance.instance
+    const [result] = await sock.onWhatsApp(phone)
+    if(result){
+        const {jid} = result
+        const {status} = await sock.fetchStatus(jid)
+        const imgUrl = await sock.profilePictureUrl(jid)
+        const profile = await sock.getBusinessProfile(jid)
+        const urlInfo = await jidDecode(
+            jid
+          )
+        console.log({urlInfo})
+        return res.json({
+            exists: true,
+            data: {
+                phone,
+                id: jid,
+                status,
+                imgUrl,
+                business: profile
+            }
+        })
+    } else {
+        return res.json({
+            exists: false
+        })
+    }
 }
