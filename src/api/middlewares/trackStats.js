@@ -5,8 +5,8 @@ function trackStats(req, res, next) {
     const userKey = req.query.key; 
     const messageType = req.path.substring(1); // 'video', 'text', 'audio', 'doc'
 
-    logger.info(req.path)
-    logger.info(`MessageType: ${messageType}`)
+    /*logger.info(req.path)
+    logger.info(`MessageType: ${messageType}`)*/
 
     saveStats(userKey, messageType, 'sent')
         .then(() => {

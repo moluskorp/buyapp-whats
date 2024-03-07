@@ -8,9 +8,6 @@ const { jidEncode, getChatId, jidDecode } = require('@whiskeysockets/baileys')
 exports.init = async (req, res) => {
     const key = req.query.key
     const clientId = req.query.id
-    const colabUserId = req.query.colabUserId
-    const setoresId = req.query.setoresId
-    const botId = req.query.botId
     const empresaId = req.query.empresaId
 
     const webhook = !req.query.webhook ? false : req.query.webhook

@@ -1,6 +1,5 @@
 /* eslint-disable no-unsafe-optional-chaining */
 const { WhatsAppInstance } = require('../class/instance')
-const logger = require('pino')()
 const config = require('../../config/config')
 
 class Session {
@@ -37,8 +36,7 @@ class Session {
                 restoredSessions.push(key)
             })
         } catch (e) {
-            logger.error('Error restoring sessions')
-            logger.error(e)
+            console.log('Error restoring sessions')
         }
         return restoredSessions
     }

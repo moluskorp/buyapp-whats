@@ -35,9 +35,6 @@ class WhatsAppInstance {
     allowWebhook = undefined
     webhook = undefined
     clientId = null
-    colabUserId = null
-    setoresId = null
-    botId = null
     empresaId = null
 
     instance = {
@@ -53,13 +50,10 @@ class WhatsAppInstance {
         baseURL: config.webhookUrl,
     })
 
-    constructor(key, allowWebhook, webhook, clientId, colabUserId, setoresId, botId, empresaId) {
+    constructor(key, allowWebhook, webhook, clientId, empresaId) {
         this.key = key ? key : uuidv4()
         this.instance.customWebhook = this.webhook ? this.webhook : webhook
         this.clientId = clientId
-        this.colabUserId = colabUserId
-        this.setoresId = setoresId
-        this.botId = botId
         this.empresaId = empresaId
         this.allowWebhook = config.webhookEnabled
             ? config.webhookEnabled
@@ -131,7 +125,9 @@ class WhatsAppInstance {
             const { connection, lastDisconnect, qr } = update
             //  TESTE MEU
             if (connection === 'connecting'){
-                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'carregando'})
+                if(this.clientId){
+                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'carregando'})
+                }
                 this.SendWebhook('connection', {
                     teste: 'teste'
                 }, this.key)
@@ -149,7 +145,13 @@ class WhatsAppInstance {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
-                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
+                    if(this.clientId){
+                        await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
+                        await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
+                        await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: ''})
+                        await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': ''})
+                        await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
+                    }
 
                 }
 
@@ -169,11 +171,13 @@ class WhatsAppInstance {
                         this.key
                     )
             } else if (connection === 'open') {
-                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
-                await updateDataInTable('colab_user', {id: this.colabUserId}, {key_colabuser: this.key})
-                await updateDataInTable('Setores', {id: this.setoresId}, {key_conexao: this.key})
-                await updateDataInTable('Bot', {id: this.botId}, {'key_conexão': this.key})
-                await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
+                if(this.clientId){
+                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
+                    await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: this.key})
+                    await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: this.key})
+                    await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
+                    await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
+                }
 
                 if (config.mongoose.enabled) {
                     let alreadyThere = await Chat.findOne({
@@ -222,6 +226,7 @@ class WhatsAppInstance {
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
+
             if (
                 ['all', 'presence', 'presence.update'].some((e) =>
                     config.webhookAllowedEvents.includes(e)
@@ -232,6 +237,7 @@ class WhatsAppInstance {
 
         // on receive all chats
         sock?.ev.on('chats.set', async ({ chats }) => {
+
             this.instance.chats = []
             const recivedChats = chats.map((chat) => {
                 return {
@@ -246,6 +252,7 @@ class WhatsAppInstance {
 
         // on recive new chat
         sock?.ev.on('chats.upsert', (newChat) => {
+
             const chats = newChat.map((chat) => {
                 return {
                     ...chat,
@@ -281,9 +288,35 @@ class WhatsAppInstance {
 
         // on new mssage
         sock?.ev.on('messages.upsert', async (m) => {
-            if (m.type === 'prepend')
-                this.instance.messages.unshift(...m.messages)
+            if (m.type === 'prepend'){
+                //Sei la
+            }
+            
+            
+            this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
+            for(const message of m.messages) {
+                try{
+                    const {remoteJid} = message.key
+                    const isGroup = remoteJid.endsWith('@g.us')
+                    if(!isGroup) {
+                        if(!message.key.fromMe) {
+                            let wppUser = remoteJid.split('@')[0]
+                            if(wppUser.includes('-')) {
+                                wppUser = wppUser.split('-')[0]
+                            }
+                            const idApi = uuidv4()
+                            const userData = await adicionaRegistro(wppUser, this.key, idApi, message.pushName)
+
+                            throw new Error('Mensagem não é minha!')
+                        }
+                    }
+                }catch(err){
+                    console.log(err.message)
+                    process.exit()
+                }
+               
+            }
 
             // https://adiwajshing.github.io/Baileys/#reading-messages
             if (config.markMessagesRead) {
@@ -302,7 +335,7 @@ class WhatsAppInstance {
             m.messages.map(async (msg) => {
                 if (!msg.message) return
 		
-		const isGroupMessage = msg.key.remoteJid.endsWith('@g.us');
+		        const isGroupMessage = msg.key.remoteJid.endsWith('@g.us');
                 const messageType = Object.keys(msg.message)[0]
 
                 if (!isGroupMessage) {
@@ -351,7 +384,7 @@ class WhatsAppInstance {
                             await this.downloadMessageSup(sock, msg, format)
     
                             fileUrl = `${bucketUrl}/${msg.key.id}.${format}`
-				console.log(fileUrl)
+				            console.log(fileUrl)
                             msg.message['documentMessage']['url'] = fileUrl
     
                             break
@@ -442,6 +475,7 @@ class WhatsAppInstance {
             //console.dir(messages);
         })
         sock?.ws.on('CB:call', async (data) => {
+
             if (data.content) {
                 if (data.content.find((e) => e.tag === 'offer')) {
                     const content = data.content.find((e) => e.tag === 'offer')
@@ -492,6 +526,7 @@ class WhatsAppInstance {
         sock?.ev.on('groups.upsert', async (newChat) => {
             // console.log('groups.upsert ❌❌❌❌❌❌')
             //console.log(newChat)
+
             this.createGroupByApp(newChat)
             if (
                 ['all', 'groups', 'groups.upsert'].some((e) =>
@@ -508,8 +543,7 @@ class WhatsAppInstance {
         })
 
         sock?.ev.on('groups.update', async (newChat) => {
-            console.log('groups.update ❌❌❌❌❌❌')
-            console.log(newChat)
+
             this.updateGroupSubjectByApp(newChat)
             if (
                 ['all', 'groups', 'groups.update'].some((e) =>
@@ -550,7 +584,13 @@ class WhatsAppInstance {
 
     async deleteInstance(key) {
         try {
+            await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', Status: false, instance_key: '', qrcode: ''})
+            await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
+            await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: ''})
+            await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': ''})
+            await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
             await Chat.findOneAndDelete({ key: key })
+
         } catch (e) {
             logger.error('Error updating document failed')
         }

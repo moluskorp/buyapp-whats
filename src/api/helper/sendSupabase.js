@@ -44,8 +44,8 @@ async function updateDataInTable(tableName, matchCriteria, newData) {
     try {
         const {data, error} = await supabase.from(tableName).update(newData).match(matchCriteria)
 
-        if(error) {
-            console.error('Error updating data:', error);
+        if(error) { 
+            console.error('Error updating data:',{tableName, matchCriteria, newData} ,error);
             return null
         } else {
             return data
@@ -79,26 +79,26 @@ async function verifyConversaId(userNumber, key) {
 }
 
 async function adicionaRegistro(userNumber, key, idApi, nome) {
+    console.log('ENTROU NA FUNÇÃO ADICIONA REGISTRO !!!!!!')
     const dadoExiste = await verifyConversaId(userNumber, key);
-	console.log(dadoExiste)
+	//console.log(dadoExiste)
     if (dadoExiste.length == 0) {
         const { data, error } = await supabase
             .from('conversas')
             .insert([{ nome_contato: nome, numero_contato: userNumber, key_instancia: key, id_api: idApi }]);
         
-        console.log('dadoExiste', dadoExiste);
-
+        //console.log('dadoExiste', dadoExiste);
         if (error) {
-            console.error('Erro ao inserir dados em conversas', error);
+            //console.error('Erro ao inserir dados em conversas', error);
             return false;
         }
 
-        console.log('Conversa adicionada com sucesso:', data);
+        //console.log('Conversa adicionada com sucesso:', data);
         const resultNew = await verifyConversaId(userNumber, key);
-        console.log('resultNew', resultNew);
+        //console.log('resultNew', resultNew);
         return resultNew;
     } else {
-        console.log('Um registro correspondente já existe.');
+        //console.log('Um registro correspondente já existe.');
         return dadoExiste;
     }
 }

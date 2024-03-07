@@ -18,13 +18,27 @@ exports.Image = async (req, res) => {
 }
 
 exports.Video = async (req, res) => {
-    const data = await WhatsAppInstances[req.query.key].sendMediaFile(
-        req.body.id,
-        req.file,
-        'video',
-        req.body?.caption
-    )
-    return res.status(201).json({ error: false, data: data })
+    const videoFile = req.file
+    const caption = req.body.caption || ''
+
+    if(!videoFile) {
+        return res.status(400).json({error: true, message: 'Nenhum arquivo de vídeo enviado'})
+    }
+
+    try {
+        const data = await WhatsAppInstances[req.query.key].sendMediaFile(
+            req.body.id,
+            videoFile,
+            'video',
+            caption
+        )
+
+        return res.status(201).json({ error: false, data: data })
+    }
+    catch(error) {
+        console.error('Erro ao enviar arquivo de vídeo', error)
+        return res.status(500).json({error: true, message: 'Erro ao enviar arquivo de vídeo'})
+    }    
 }
 
 exports.Audio = async (req, res) => {
