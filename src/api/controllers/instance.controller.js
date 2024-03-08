@@ -14,7 +14,7 @@ exports.init = async (req, res) => {
     const webhookUrl = !req.query.webhookUrl ? null : req.query.webhookUrl
 
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
-    const instance = new WhatsAppInstance(key, webhook, webhookUrl, clientId, colabUserId, setoresId, botId, empresaId)
+    const instance = new WhatsAppInstance(key, webhook, webhookUrl, clientId, empresaId)
     const data = await instance.init()
     WhatsAppInstances[data.key] = instance
     const qr = await WhatsAppInstances[req.query.key]?.instance.qr
