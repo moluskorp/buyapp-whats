@@ -110,9 +110,6 @@ class WhatsAppInstance {
         this.socketConfig.auth = this.authState.state
         this.socketConfig.browser = Object.values(config.browser)
         this.instance.sock = makeWASocket(this.socketConfig)
-        if(this.clientId) {
-            updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'carregando'})
-        }
         
         this.setHandler()
         return this
