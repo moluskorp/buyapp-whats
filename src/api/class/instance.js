@@ -172,9 +172,12 @@ class WhatsAppInstance {
                     )
             } else if (connection === 'open') {
                 if(this.clientId){
-                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
+                    const {id: userId} = await this.getInstanceDetail(this.key)
+                    const {id, name} = await this.instance.sock.fetchStatus(userId)
+                    const phone = id.split('@')[0].split(':')[0]
+                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: '', Nome: name, 'Número': phone})
                     await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: this.key})
-                    await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: this.key})
+                    await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: this.key})
                     await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
                     await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
                 }
