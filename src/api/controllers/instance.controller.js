@@ -1,6 +1,4 @@
 const { WhatsAppInstance } = require('../class/instance')
-const fs = require('fs')
-const path = require('path')
 const config = require('../../config/config')
 const { Session } = require('../class/session')
 const { jidEncode, getChatId, jidDecode } = require('@whiskeysockets/baileys')
@@ -72,7 +70,6 @@ exports.info = async (req, res) => {
         const {id} = data.user
         const status = await instance.instance.sock.fetchStatus(id)
         user = status
-        console.log({user})
     } catch (error) {
         data = {}
     }

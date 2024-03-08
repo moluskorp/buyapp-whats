@@ -169,15 +169,23 @@ class WhatsAppInstance {
                     )
             } else if (connection === 'open') {
                 if(this.clientId){
-                    this.instance?.online ? this.instance.sock?.user
-                    const {id: userId} = await this.getInstanceDetail(this.key)
-                    const {id, name} = await this.instance.sock.fetchStatus(userId)
-                    const phone = id.split('@')[0].split(':')[0]
-                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: '', Nome: name, 'Número': phone})
+                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
                     await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: this.key})
-                    await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: this.key})
-                    await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
-                    await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
+                        await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: this.key})
+                        await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
+                        await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
+                    setTimeout(async () => {
+                    //     const {user} = await this.getInstanceDetail(this.key)
+                    //     console.log({user})
+                    //     const data = await this.instance.sock.fetchStatus(user.id)
+                    //     console.log({data})
+                    //     const{id, name} = data
+                    //     console.log({id, name})
+                    //     const phone = id.split('@')[0].split(':')[0]
+                    //     console.log({phone})
+                    // await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: '', Nome: name, 'Número': phone})
+                    }, 9000);
+
                 }
 
                 if (config.mongoose.enabled) {
@@ -309,7 +317,7 @@ class WhatsAppInstance {
                             const idApi = uuidv4()
                             const userData = await adicionaRegistro(wppUser, this.key, idApi, message.pushName)
 
-                            throw new Error('Mensagem não é minha!')
+                            //throw new Error('Mensagem não é minha!')
                         }
                     }
                 }catch(err){
