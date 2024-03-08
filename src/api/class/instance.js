@@ -111,7 +111,7 @@ class WhatsAppInstance {
         this.socketConfig.browser = Object.values(config.browser)
         this.instance.sock = makeWASocket(this.socketConfig)
         if(this.clientId) {
-            await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'carregando'})
+            updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'carregando'})
         }
         
         this.setHandler()
