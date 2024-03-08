@@ -169,6 +169,7 @@ class WhatsAppInstance {
                     )
             } else if (connection === 'open') {
                 if(this.clientId){
+                    this.instance?.online ? this.instance.sock?.user
                     const {id: userId} = await this.getInstanceDetail(this.key)
                     const {id, name} = await this.instance.sock.fetchStatus(userId)
                     const phone = id.split('@')[0].split(':')[0]
@@ -606,8 +607,10 @@ class WhatsAppInstance {
     }
 
     getWhatsAppId(id) {
-        if (id.includes('@g.us') || id.includes('@s.whatsapp.net')) return id
-        return id.includes('-') ? `${id}@g.us` : `${id}@s.whatsapp.net`
+        if (id.includes('@g.us') || id.includes('@s.whatsapp.net')){
+            return id
+        } 
+        return id.includes('-') ? id+'@g.us' : id+'@s.whatsapp.net'
     }
 
     async verifyId(id) {
