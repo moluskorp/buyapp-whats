@@ -10,8 +10,6 @@ const initDBStats = require('./api/db/db')
 const { Session } = require('./api/class/session')
 const connectToCluster = require('./api/helper/connectMongoClient')
 
-let server
-
 if (config.mongoose.enabled) {
     mongoose.set('strictQuery', true);
     mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
@@ -21,7 +19,7 @@ if (config.mongoose.enabled) {
 
 initDBStats()
 
-server = app.listen(config.port, async () => {
+const server = app.listen(config.port, async () => {
     console.log('Listening on port: ', config.port)
     global.mongoClient = await connectToCluster(config.mongoose.url)
     if (config.restoreSessionsOnStartup) {

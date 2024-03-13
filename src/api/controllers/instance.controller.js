@@ -62,6 +62,7 @@ exports.qrbase64 = async (req, res) => {
 
 exports.info = async (req, res) => {
     const instance = WhatsAppInstances[req.query.key]
+    instance.updateIntanceInfo()
     let data
     let user
     try {

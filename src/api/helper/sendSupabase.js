@@ -15,11 +15,12 @@ function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms));
 
 async function sendDataToSupabase(tableName, data) {
 	try {  
-        const response = await supabase.from(tableName).insert([data]); if 
-        (response.error) {
+        const response = await supabase.from(tableName).insert([data]).select()
+        if(response.error) {
             console.error('Error inserting data:', response.error);
+            return null
         } else {
-            console.log('Data inserted:', response.data);
+            return response.data[0]
         }
     } catch (error) {
         console.error('An unexpected error occurred:', error);
@@ -36,6 +37,35 @@ async function fetchAllDataFromTable(tableName) {
         }
     }catch(error) {
         console.error('An unexpected error occurred:', error);
+        return null
+    }
+}
+
+async function getIdConexoes(tableName, condition) {
+    try {
+        const {data, error} = await supabase.from(tableName).select('id, id_empresa, Nome').eq('instance_key', condition).single()
+
+        if(error) {
+            return null
+        } else {
+            return data
+        }
+    } catch(error) {
+        console.error('Ocorreu um erro inesperado', error)
+        return null
+    }
+}
+
+async function getSingleConversa(numero, empresaId) {
+    try {
+        const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at').single()
+        if(error) {
+            return null
+        } else {
+            return data
+        }
+    } catch(error) {
+        console.error('Ocorreu um erro inesperado', error)
         return null
     }
 }
@@ -79,7 +109,6 @@ async function verifyConversaId(userNumber, key) {
 }
 
 async function adicionaRegistro(userNumber, key, idApi, nome) {
-    console.log('ENTROU NA FUNÇÃO ADICIONA REGISTRO !!!!!!')
     const dadoExiste = await verifyConversaId(userNumber, key);
 	//console.log(dadoExiste)
     if (dadoExiste.length == 0) {
@@ -106,11 +135,11 @@ async function adicionaRegistro(userNumber, key, idApi, nome) {
 async function uploadSUp(filePath, filename) {
     const fileContent = readFileSync(filePath)
     const storagePath = `arquivos/${filename}`;
-
+    
     let { error } = await supabase.storage
-        .from('chat')
-        .upload(storagePath, fileContent);
-
+    .from('chat')
+    .upload(storagePath, fileContent);
+    
     if (error) throw error;
     unlinkSync(filePath)
 
@@ -139,6 +168,8 @@ module.exports = {
     fetchAllDataFromTable,
     updateDataInTable,
     uploadSUp,
-    deleteDataFromtable
+    deleteDataFromtable,
+    getIdConexoes,
+    getSingleConversa
 };
 

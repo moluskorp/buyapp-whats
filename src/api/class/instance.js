@@ -20,7 +20,7 @@ const useMongoDBAuthState = require('../helper/mongoAuthState')
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable} = require('../helper/sendSupabase');
+const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa} = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -31,6 +31,7 @@ class WhatsAppInstance {
         }),
     }
     key = ''
+    name = null
     authState
     allowWebhook = undefined
     webhook = undefined
@@ -38,6 +39,7 @@ class WhatsAppInstance {
     empresaId = null
 
     instance = {
+        conexaoId: '',
         key: this.key,
         chats: [],
         qr: '',
@@ -51,9 +53,9 @@ class WhatsAppInstance {
     })
 
     constructor(key, allowWebhook, webhook, clientId, empresaId) {
+        console.log('Entrou no constructor')
         this.key = key ? key : uuidv4()
         this.instance.customWebhook = this.webhook ? this.webhook : webhook
-        this.clientId = clientId
         this.empresaId = empresaId
         this.allowWebhook = config.webhookEnabled
             ? config.webhookEnabled
@@ -65,10 +67,25 @@ class WhatsAppInstance {
                 baseURL: webhook,
             })
         }
+        if(clientId){
+            this.clientId = clientId
+        } else {
+            getIdConexoes('conexoes', this.key).then((result) => {
+                if(result){
+                    this.clientId = result.id
+                    this.empresaId = result.id_empresa
+                    this.name = result.Nome
+                } else {
+                    delete WhatsAppInstances[this.key]
+                }
+            })
+        }
+        
         
     }
-    async downloadMessageSup(sock, msg, extension) {
+    async downloadMessageSup(sock, msg, extension, id) {
         // download the message
+        console.log('Entrou no downloadMessageSup')
         const buffer = await downloadMediaMessage(
             msg,
             'buffer',
@@ -81,7 +98,7 @@ class WhatsAppInstance {
             }
         )
         // save to file
-        const fileName = `${msg.key.id}.${extension}`;
+        const fileName = `${id ? id : msg.key.id}.${extension}`;
         const path = `${process.cwd()}/temp/${fileName}`;
     
         try {
@@ -110,6 +127,7 @@ class WhatsAppInstance {
         this.socketConfig.auth = this.authState.state
         this.socketConfig.browser = Object.values(config.browser)
         this.instance.sock = makeWASocket(this.socketConfig)
+        this.instance.conexaoId = this.clientId
         
         this.setHandler()
         return this
@@ -142,8 +160,8 @@ class WhatsAppInstance {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
-                    if(this.clientId){
-                        await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
+                    if(this.instance.conexaoId){
+                        await updateDataInTable('conexoes', {id: this.instance.conexaoId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
                         await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
                         await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: ''})
                         await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': ''})
@@ -168,22 +186,14 @@ class WhatsAppInstance {
                         this.key
                     )
             } else if (connection === 'open') {
-                if(this.clientId){
-                    await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
+                if(this.instance.conexaoId){
+                    await updateDataInTable('conexoes', {id: this.instance.conexaoId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
                     await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: this.key})
                         await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: this.key})
                         await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
                         await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
                     setTimeout(async () => {
-                    //     const {user} = await this.getInstanceDetail(this.key)
-                    //     console.log({user})
-                    //     const data = await this.instance.sock.fetchStatus(user.id)
-                    //     console.log({data})
-                    //     const{id, name} = data
-                    //     console.log({id, name})
-                    //     const phone = id.split('@')[0].split(':')[0]
-                    //     console.log({phone})
-                    // await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: '', Nome: name, 'Número': phone})
+                        this.updateIntanceInfo()
                     }, 9000);
 
                 }
@@ -195,6 +205,7 @@ class WhatsAppInstance {
                     if (!alreadyThere) {
                         const saveChat = new Chat({ key: this.key })
                         await saveChat.save()
+                        
                     }
                 }
                 this.instance.online = true
@@ -220,7 +231,9 @@ class WhatsAppInstance {
                 QRCode.toDataURL(qr).then((url) => {
                     this.instance.qr = url
                     this.instance.qrRetry++
-                    updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'qrCode', qrcode: url})
+                    if(this.clientId){
+                        updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'qrCode', qrcode: url})
+                    }
                     // if (this.instance.qrRetry >= config.instance.maxRetryQr) {
                     //     // close WebSocket connection
                     //     this.instance.sock.ws.close()
@@ -308,229 +321,303 @@ class WhatsAppInstance {
                 try{
                     const {remoteJid} = message.key
                     const isGroup = remoteJid.endsWith('@g.us')
-                    if(!isGroup) {
+                    const isStatus = remoteJid.indexOf('status@') >= 0
+                    const messageType = Object.keys(message.message)[0]
+                    if(!isGroup && !isStatus) {
                         if(!message.key.fromMe) {
                             let wppUser = remoteJid.split('@')[0]
                             if(wppUser.includes('-')) {
                                 wppUser = wppUser.split('-')[0]
                             }
                             const idApi = uuidv4()
-                            const userData = await adicionaRegistro(wppUser, this.key, idApi, message.pushName)
+                            const conversa = await getSingleConversa(wppUser, this.empresaId)
+                            let msg = message
 
+                            let fileName;
+                            let fileUrl;
+                            let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
+                            let webhook
+                            if(conversa) {
+                                if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
+                                    await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
+                                    webhook = await sendDataToSupabase('webhook', {
+                                        data: msg,
+                                        contatos: msg.key.remoteJid.split('@')[0],
+                                        fromMe: false,
+                                        mensagem: msg.message.extendedTextMessage ? msg.message.extendedTextMessage.text : null,
+                                        'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
+                                        imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
+                                        'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
+                                        file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
+                                        'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
+                                        'id_api_conversa' : conversa.id_api,
+                                        video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                    })
+
+
+                                } else if(conversa.Status === 'Finalizado' || conversa.Status === 'Visualizado') {
+                                    await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
+                                    webhook = await sendDataToSupabase('webhook', {
+                                        data: msg,
+                                        contatos: msg.key.remoteJid.split('@')[0],
+                                        fromMe: false,
+                                        mensagem: msg.message.extendedTextMessage.text || null,
+                                        'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
+                                        imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
+                                        'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
+                                        file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
+                                        'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
+                                        'id_api_conversa' : conversa.id_api,
+                                        video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                    })
+                                }
+                            } else {
+                                await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
+                                webhook = await sendDataToSupabase('webhook', {
+                                    data: msg,
+                                    contatos: msg.key.remoteJid.split('@')[0],
+                                    fromMe: false,
+                                    mensagem: msg.message.extendedTextMessage.text || null,
+                                    'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
+                                    imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
+                                    'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
+                                    file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
+                                    'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
+                                    'id_api_conversa' : conversa.id_api,
+                                    video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                })
+                            }
+                            await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                             //throw new Error('Mensagem não é minha!')
+                        } else {
+                            if(!this.name) {
+                                this.name = message.pushName
+                                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: this.name})
+                            }
                         }
+                        this.instance.messages.unshift(...m.messages)
+                    }
+                    if (config.markMessagesRead) {
+                        const unreadMessages = m.messages.map((msg) => {
+                            return {
+                                remoteJid: msg.key.remoteJid,
+                                id: msg.key.id,
+                                participant: msg.key?.participant,
+                            }
+                        })
+                        await sock.readMessages(unreadMessages)
                     }
                 }catch(err){
                     console.log(err.message)
-                    process.exit()
+                    // process.exit()
                 }
                
             }
 
             // https://adiwajshing.github.io/Baileys/#reading-messages
-            if (config.markMessagesRead) {
-                const unreadMessages = m.messages.map((msg) => {
-                    return {
-                        remoteJid: msg.key.remoteJid,
-                        id: msg.key.id,
-                        participant: msg.key?.participant,
-                    }
-                })
-                await sock.readMessages(unreadMessages)
-            }
+            // if (config.markMessagesRead) {
+            //     const unreadMessages = m.messages.map((msg) => {
+            //         return {
+            //             remoteJid: msg.key.remoteJid,
+            //             id: msg.key.id,
+            //             participant: msg.key?.participant,
+            //         }
+            //     })
+            //     await sock.readMessages(unreadMessages)
+            // }
 
-            this.instance.messages.unshift(...m.messages)
+            // this.instance.messages.unshift(...m.messages)
 
-            m.messages.map(async (msg) => {
-                if (!msg.message) return
+            // m.messages.map(async (msg) => {
+            //     if (!msg.message) return
 		
-		        const isGroupMessage = msg.key.remoteJid.endsWith('@g.us');
-                const messageType = Object.keys(msg.message)[0]
+		    //     const isGroupMessage = msg.key.remoteJid.endsWith('@g.us');
+            //     const messageType = Object.keys(msg.message)[0]
 
-                if (!isGroupMessage) {
-			if (msg.key.fromMe != true) { 
-                    const remoteJid = msg.key.remoteJid;
-                    let wppUser = remoteJid.split('@')[0];
+            //     if (!isGroupMessage) {
+			// if (msg.key.fromMe != true) { 
+            //         const remoteJid = msg.key.remoteJid;
+            //         let wppUser = remoteJid.split('@')[0];
 
-                    if (wppUser.includes('-')) {
-                        wppUser = wppUser.split('-')[0];
-                    }
-                    const idApi = uuidv4() 
-                    const userData = await adicionaRegistro(wppUser, this.key, idApi, msg.pushName)
-                    console.log(userData)
-                    const conversaId = userData[0].id_api;
-                    msg.key['conversaId'] = conversaId;
-			}
+            //         if (wppUser.includes('-')) {
+            //             wppUser = wppUser.split('-')[0];
+            //         }
+            //         const idApi = uuidv4() 
+            //         const userData = await adicionaRegistro(wppUser, this.key, idApi, msg.pushName)
+            //         console.log(userData)
+            //         const conversaId = userData[0].id_api;
+            //         msg.key['conversaId'] = conversaId;
+			// }
 
-                    let fileName;
-                    let fileUrl;
-                    let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
-                   console.log(msg);
-			switch (messageType) {
-                        case 'imageMessage':
-                            await this.downloadMessageSup(sock, msg, 'jpeg');
+            //         let fileName;
+            //         let fileUrl;
+            //         let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
+            //        console.log(msg);
+			// switch (messageType) {
+            //             case 'imageMessage':
+            //                 await this.downloadMessageSup(sock, msg, 'jpeg');
                             
-                            fileUrl = `${bucketUrl}/${msg.key.id}.jpeg`
-                            msg.message['imageMessage']['url'] = fileUrl
+            //                 fileUrl = `${bucketUrl}/${msg.key.id}.jpeg`
+            //                 msg.message['imageMessage']['url'] = fileUrl
                             
-                            break;
-                        case 'videoMessage':
-                            await this.downloadMessageSup(sock, msg, 'mp4');
+            //                 break;
+            //             case 'videoMessage':
+            //                 await this.downloadMessageSup(sock, msg, 'mp4');
                             
-                            fileUrl = `${bucketUrl}/${fileName}${msg.key.id}.mp4`
-                            msg.message['videoMessage']['url'] = fileUrl
+            //                 fileUrl = `${bucketUrl}/${fileName}${msg.key.id}.mp4`
+            //                 msg.message['videoMessage']['url'] = fileUrl
                             
-                            break;
-                        case 'audioMessage':
-                            await this.downloadMessageSup(sock, msg, 'mp3');
+            //                 break;
+            //             case 'audioMessage':
+            //                 await this.downloadMessageSup(sock, msg, 'mp3');
                             
-                            fileUrl = `${bucketUrl}/${msg.key.id}.mp3`
-                            msg.message['audioMessage']['url'] = fileUrl
+            //                 fileUrl = `${bucketUrl}/${msg.key.id}.mp3`
+            //                 msg.message['audioMessage']['url'] = fileUrl
                             
-                            break;
-                        case 'documentMessage':
-                            const format = `${msg.message['documentMessage']['mimetype'].split('/')[1]}`
-                            await this.downloadMessageSup(sock, msg, format)
+            //                 break;
+            //             case 'documentMessage':
+            //                 const format = `${msg.message['documentMessage']['mimetype'].split('/')[1]}`
+            //                 await this.downloadMessageSup(sock, msg, format)
     
-                            fileUrl = `${bucketUrl}/${msg.key.id}.${format}`
-				            console.log(fileUrl)
-                            msg.message['documentMessage']['url'] = fileUrl
+            //                 fileUrl = `${bucketUrl}/${msg.key.id}.${format}`
+			// 	            console.log(fileUrl)
+            //                 msg.message['documentMessage']['url'] = fileUrl
     
-                            break
-                    }
-                }
-                if (
-                    [
-                        'protocolMessage',
-                        'senderKeyDistributionMessage',
-                    ].includes(messageType)
-                )
-                    return
+            //                 break
+            //         }
+            //     }
+            //     if (
+            //         [
+            //             'protocolMessage',
+            //             'senderKeyDistributionMessage',
+            //         ].includes(messageType)
+            //     )
+            //         return
 
-                const webhookData = {
-                    key: this.key,
-                    ...msg,
-                }
+            //     const webhookData = {
+            //         key: this.key,
+            //         ...msg,
+            //     }
 
-                if (messageType === 'conversation') {
-                    webhookData['text'] = m
-                }
-                if (config.webhookBase64) {
-                    switch (messageType) {
-                        case 'imageMessage':
-                            webhookData['msgContent'] = await downloadMessage(
-                                msg.message.imageMessage,
-                                'image'
-                            )
-                            saveStats(this.key, 'image', 'received') 
-                            .then(() => {
-                                logger.info("Foi...")  
-                            })
-                            .catch(err => {
-                                console.error(err);
-                            });
+            //     if (messageType === 'conversation') {
+            //         webhookData['text'] = m
+            //     }
+            //     if (config.webhookBase64) {
+            //         switch (messageType) {
+            //             case 'imageMessage':
+            //                 webhookData['msgContent'] = await downloadMessage(
+            //                     msg.message.imageMessage,
+            //                     'image'
+            //                 )
+            //                 saveStats(this.key, 'image', 'received') 
+            //                 .then(() => {
+            //                     logger.info("Foi...")  
+            //                 })
+            //                 .catch(err => {
+            //                     console.error(err);
+            //                 });
                             
-                            break
-                        case 'videoMessage':
-                            webhookData['msgContent'] = await downloadMessage(
-                                msg.message.videoMessage,
-                                'video'
-                            )
-                            saveStats(this.key, 'video', 'received')
-                            .then(() => {
-                                logger.info("Foi...")  
-                            })
-                            .catch(err => {
-                                console.error(err);
-                            });
-                            break
-                        case 'audioMessage':
-                            webhookData['msgContent'] = await downloadMessage(
-                                msg.message.audioMessage,
-                                'audio'
-                            )
-                            saveStats(this.key, 'audio', 'received')
-                            .then(() => {
-                                logger.info("Foi...")  
-                            })
-                            .catch(err => {
-                                console.error(err);
-                            });  
-                            break
-                        default:
-                            webhookData['msgContent'] = ''
-                            saveStats(this.key, 'text', 'received')
-                            .then(() => {
-                                logger.info("Foi...")  
-                            })
-                            .catch(err => {
-                                console.error(err);
-                            });  
-                            break
-                    }
-                }
-                if (
-                    ['all', 'messages', 'messages.upsert'].some((e) =>
-                        config.webhookAllowedEvents.includes(e)
-                    )
-                )
-                    await this.SendWebhook('message', webhookData, this.key)
-                    await sendDataToSupabase('webhook', { data: webhookData });
-            })
+            //                 break
+            //             case 'videoMessage':
+            //                 webhookData['msgContent'] = await downloadMessage(
+            //                     msg.message.videoMessage,
+            //                     'video'
+            //                 )
+            //                 saveStats(this.key, 'video', 'received')
+            //                 .then(() => {
+            //                     logger.info("Foi...")  
+            //                 })
+            //                 .catch(err => {
+            //                     console.error(err);
+            //                 });
+            //                 break
+            //             case 'audioMessage':
+            //                 webhookData['msgContent'] = await downloadMessage(
+            //                     msg.message.audioMessage,
+            //                     'audio'
+            //                 )
+            //                 saveStats(this.key, 'audio', 'received')
+            //                 .then(() => {
+            //                     logger.info("Foi...")  
+            //                 })
+            //                 .catch(err => {
+            //                     console.error(err);
+            //                 });  
+            //                 break
+            //             default:
+            //                 webhookData['msgContent'] = ''
+            //                 saveStats(this.key, 'text', 'received')
+            //                 .then(() => {
+            //                     logger.info("Foi...")  
+            //                 })
+            //                 .catch(err => {
+            //                     console.error(err);
+            //                 });  
+            //                 break
+            //         }
+            //     }
+            //     if (
+            //         ['all', 'messages', 'messages.upsert'].some((e) =>
+            //             config.webhookAllowedEvents.includes(e)
+            //         )
+            //     )
+            //         await this.SendWebhook('message', webhookData, this.key)
+            //         await sendDataToSupabase('webhook', { data: webhookData });
+            // })
         })
 
         sock?.ev.on('messages.update', async (messages) => {
             //console.log('messages.update')
             //console.dir(messages);
         })
-        sock?.ws.on('CB:call', async (data) => {
+        // sock?.ws.on('CB:call', async (data) => {
 
-            if (data.content) {
-                if (data.content.find((e) => e.tag === 'offer')) {
-                    const content = data.content.find((e) => e.tag === 'offer')
-                    if (
-                        ['all', 'call', 'CB:call', 'call:offer'].some((e) =>
-                            config.webhookAllowedEvents.includes(e)
-                        )
-                    )
-                        await this.SendWebhook(
-                            'call_offer',
-                            {
-                                id: content.attrs['call-id'],
-                                timestamp: parseInt(data.attrs.t),
-                                user: {
-                                    id: data.attrs.from,
-                                    platform: data.attrs.platform,
-                                    platform_version: data.attrs.version,
-                                },
-                            },
-                            this.key
-                        )
-                } else if (data.content.find((e) => e.tag === 'terminate')) {
-                    const content = data.content.find(
-                        (e) => e.tag === 'terminate'
-                    )
+        //     if (data.content) {
+        //         if (data.content.find((e) => e.tag === 'offer')) {
+        //             const content = data.content.find((e) => e.tag === 'offer')
+        //             if (
+        //                 ['all', 'call', 'CB:call', 'call:offer'].some((e) =>
+        //                     config.webhookAllowedEvents.includes(e)
+        //                 )
+        //             )
+        //                 await this.SendWebhook(
+        //                     'call_offer',
+        //                     {
+        //                         id: content.attrs['call-id'],
+        //                         timestamp: parseInt(data.attrs.t),
+        //                         user: {
+        //                             id: data.attrs.from,
+        //                             platform: data.attrs.platform,
+        //                             platform_version: data.attrs.version,
+        //                         },
+        //                     },
+        //                     this.key
+        //                 )
+        //         } else if (data.content.find((e) => e.tag === 'terminate')) {
+        //             const content = data.content.find(
+        //                 (e) => e.tag === 'terminate'
+        //             )
 
-                    if (
-                        ['all', 'call', 'call:terminate'].some((e) =>
-                            config.webhookAllowedEvents.includes(e)
-                        )
-                    )
-                        await this.SendWebhook(
-                            'call_terminate',
-                            {
-                                id: content.attrs['call-id'],
-                                user: {
-                                    id: data.attrs.from,
-                                },
-                                timestamp: parseInt(data.attrs.t),
-                                reason: data.content[0].attrs.reason,
-                            },
-                            this.key
-                        )
-                }
-            }
-        })
+        //             if (
+        //                 ['all', 'call', 'call:terminate'].some((e) =>
+        //                     config.webhookAllowedEvents.includes(e)
+        //                 )
+        //             )
+        //                 await this.SendWebhook(
+        //                     'call_terminate',
+        //                     {
+        //                         id: content.attrs['call-id'],
+        //                         user: {
+        //                             id: data.attrs.from,
+        //                         },
+        //                         timestamp: parseInt(data.attrs.t),
+        //                         reason: data.content[0].attrs.reason,
+        //                     },
+        //                     this.key
+        //                 )
+        //         }
+        //     }
+        // })
 
         sock?.ev.on('groups.upsert', async (newChat) => {
             // console.log('groups.upsert ❌❌❌❌❌❌')
@@ -612,6 +699,14 @@ class WhatsAppInstance {
             webhookUrl: this.instance.customWebhook,
             user: this.instance?.online ? this.instance.sock?.user : {},
         }
+    }
+
+    async updateIntanceInfo() {
+            const {user} = await this.getInstanceDetail(this.key)
+            const {id, name} = user
+            const phone = id.split('@')[0].split(':')[0]
+            this.name = name
+            await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone})
     }
 
     getWhatsAppId(id) {
@@ -1184,6 +1279,63 @@ class WhatsAppInstance {
             logger.error('Error react message failed')
         }
     }
+
+    async workWithMessageType(messageType, sock, msg, id_api, fileUrl, bucketUrl) {
+        console.log('Entrou no workWithMesageType')
+        console.log({messageType})
+        switch(messageType) {
+            case 'imageMessage':
+                await this.downloadMessageSup(sock, msg, 'jpeg');
+    
+                fileUrl = `${bucketUrl}/${msg.key.id}.jpeg`
+                msg.message['imageMessage']['url'] = fileUrl
+                
+                break; 
+            case 'videoMessage':
+                await this.downloadMessageSup(sock, msg, 'mp4');
+                
+                fileUrl = `${bucketUrl}/${msg.key.id}.mp4`
+                msg.message['videoMessage']['url'] = fileUrl
+                
+                break;
+            case 'audioMessage':
+                    await this.downloadMessageSup(sock, msg, 'mp3');
+                    
+                    fileUrl = `${bucketUrl}/${msg.key.id}.mp3`
+                    msg.message['audioMessage']['url'] = fileUrl
+                    
+                    break;
+            case 'documentMessage':
+                console.log('Entrou no documentMessage')
+                const format = `${msg.message['documentMessage']['mimetype'].split('/')[1]}`
+                console.log({format})
+                await this.downloadMessageSup(sock, msg, format)
+    
+                fileUrl = `${bucketUrl}/${msg.key.id}.${format}`
+                msg.message['documentMessage']['url'] = fileUrl
+    
+                break
+            case 'extendedTextMessage':
+                break
+            case 'messageContextInfo':
+                if(msg.message.documentWithCaptionMessage){
+                const format2 = `${msg.message.documentWithCaptionMessage.message['documentMessage']['mimetype'].split('/')[1]}`
+                await this.downloadMessageSup(sock, msg.message.documentWithCaptionMessage, format2, msg.key.id)
+                fileUrl = `${bucketUrl}/${msg.key.id}.${format2}`
+                msg.message.documentMessage = {
+                    url: fileUrl,
+                    caption: msg.message.documentWithCaptionMessage.message['documentMessage'].caption
+                }
+                }
+                
+                break
+            
+        }
+        msg.key['conversaId'] = id_api
+    }
 }
 
+
+
 exports.WhatsAppInstance = WhatsAppInstance
+
