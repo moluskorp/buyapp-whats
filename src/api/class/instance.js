@@ -371,6 +371,8 @@ class WhatsAppInstance {
                                         video: msg.message.videoMessage ? msg.message.videoMessage.url : null
                                     })
                                 }
+                                await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
+
                             } else {
                                 await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
                                 webhook = await sendDataToSupabase('webhook', {
@@ -383,11 +385,20 @@ class WhatsAppInstance {
                                     'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
                                     file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
                                     'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
-                                    'id_api_conversa' : conversa.id_api,
+                                    'id_api_conversa' : idApi,
                                     video: msg.message.videoMessage ? msg.message.videoMessage.url : null
                                 })
+                                const imgUrl = await sock.profilePictureUrl(remoteJid)
+                                await sendDataToSupabase('conversas', {
+                                    numero_contato: wppUser,
+                                    foto_contato: imgUrl,
+                                    nome_contato: message.pushName,
+                                    ref_empresa: this.empresaId,
+                                    webhook_id_ultima: webhook.id,
+                                    key_instancia: this.key,
+                                    id_api: idApi,
+                                })
                             }
-                            await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                             //throw new Error('Mensagem não é minha!')
                         } else {
                             if(!this.name) {
