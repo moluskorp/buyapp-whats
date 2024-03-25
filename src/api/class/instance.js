@@ -353,8 +353,7 @@ class WhatsAppInstance {
                                         'id_api_conversa' : conversa.id_api,
                                         video: msg.message.videoMessage ? msg.message.videoMessage.url : null
                                     })
-
-
+                                    await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                                 } else if(conversa.Status === 'Finalizado' || conversa.Status === 'Visualizado') {
                                     await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
                                     webhook = await sendDataToSupabase('webhook', {
@@ -370,8 +369,17 @@ class WhatsAppInstance {
                                         'id_api_conversa' : conversa.id_api,
                                         video: msg.message.videoMessage ? msg.message.videoMessage.url : null
                                     })
+                                    const imgUrl = await sock.profilePictureUrl(remoteJid)
+                                    await sendDataToSupabase('conversas', {
+                                        numero_contato: wppUser,
+                                        foto_contato: imgUrl,
+                                        nome_contato: message.pushName,
+                                        ref_empresa: this.empresaId,
+                                        webhook_id_ultima: webhook.id,
+                                        key_instancia: this.key,
+                                        id_api: conversa.id_api,
+                                    })
                                 }
-                                await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
 
                             } else {
                                 await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
