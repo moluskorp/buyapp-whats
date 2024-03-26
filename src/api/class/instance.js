@@ -23,7 +23,7 @@ const ffmpegStatic = require('ffmpeg-static');
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa} = require('../helper/sendSupabase');
+const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook} = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -343,35 +343,46 @@ class WhatsAppInstance {
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
-                                    webhook = await sendDataToSupabase('webhook', {
-                                        data: msg,
-                                        contatos: msg.key.remoteJid.split('@')[0],
-                                        fromMe: false,
-                                        mensagem: msg.message.conversation ? msg.message.conversation : null,
-                                        'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
-                                        imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
-                                        'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
-                                        file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
-                                        'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
-                                        'id_api_conversa' : conversa.id_api,
-                                        video: msg.message.videoMessage ? msg.message.videoMessage.url : null
-                                    })
-                                    await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
-                                } else if(conversa.Status === 'Finalizado' || conversa.Status === 'Visualizado') {
+                                    const webhookExists = getSingleWebhook(msg)
+                                    if(!webhookExists) {
+                                        webhook = await sendDataToSupabase('webhook', {
+                                            data: msg,
+                                            contatos: msg.key.remoteJid.split('@')[0],
+                                            fromMe: false,
+                                            mensagem: msg.message.conversation ? msg.message.conversation : null,
+                                            'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
+                                            imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
+                                            'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
+                                            file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
+                                            'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
+                                            'id_api_conversa' : conversa.id_api,
+                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                        })
+                                        await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
+                                    } else {
+                                        await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhookExists.id})
+
+                                    }
+                                    
+                                    
+                                } else if(conversa.Status === 'Finalizado' || conversa.Status === 'Visualizar') {
                                     await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
-                                    webhook = await sendDataToSupabase('webhook', {
-                                        data: msg,
-                                        contatos: msg.key.remoteJid.split('@')[0],
-                                        fromMe: false,
-                                        mensagem: msg.message.conversation ? msg.message.conversation : null,
-                                        'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
-                                        imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
-                                        'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
-                                        file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
-                                        'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
-                                        'id_api_conversa' : conversa.id_api,
-                                        video: msg.message.videoMessage ? msg.message.videoMessage.url : null
-                                    })
+                                    const webhookExists = await getSingleWebhook(msg)
+                                    if(!webhookExists) {
+                                        webhook = await sendDataToSupabase('webhook', {
+                                            data: msg,
+                                            contatos: msg.key.remoteJid.split('@')[0],
+                                            fromMe: false,
+                                            mensagem: msg.message.conversation ? msg.message.conversation : null,
+                                            'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
+                                            imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
+                                            'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
+                                            file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
+                                            'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
+                                            'id_api_conversa' : conversa.id_api,
+                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                        })
+                                    }
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
                                         numero_contato: wppUser,
@@ -386,29 +397,34 @@ class WhatsAppInstance {
 
                             } else {
                                 await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
-                                webhook = await sendDataToSupabase('webhook', {
-                                    data: msg,
-                                    contatos: msg.key.remoteJid.split('@')[0],
-                                    fromMe: false,
-                                    mensagem: msg.message.conversation ? msg.message.conversation : null,
-                                    'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
-                                    imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
-                                    'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
-                                    file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
-                                    'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
-                                    'id_api_conversa' : idApi,
-                                    video: msg.message.videoMessage ? msg.message.videoMessage.url : null
-                                })
-                                const imgUrl = await sock.profilePictureUrl(remoteJid)
-                                await sendDataToSupabase('conversas', {
-                                    numero_contato: wppUser,
-                                    foto_contato: imgUrl,
-                                    nome_contato: message.pushName,
-                                    ref_empresa: this.empresaId,
-                                    webhook_id_ultima: webhook.id,
-                                    key_instancia: this.key,
-                                    id_api: idApi,
-                                })
+                                const webhookExists = await getSingleWebhook(msg)
+                                if(!webhookExists) {
+                                    webhook = await sendDataToSupabase('webhook', {
+                                        data: msg,
+                                        contatos: msg.key.remoteJid.split('@')[0],
+                                        fromMe: false,
+                                        mensagem: msg.message.conversation ? msg.message.conversation : null,
+                                        'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
+                                        imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
+                                        'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
+                                        file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
+                                        'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
+                                        'id_api_conversa' : idApi,
+                                        video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                    })
+                                    const imgUrl = await sock.profilePictureUrl(remoteJid)
+                                    await sendDataToSupabase('conversas', {
+                                        numero_contato: wppUser,
+                                        foto_contato: imgUrl,
+                                        nome_contato: message.pushName,
+                                        ref_empresa: this.empresaId,
+                                        webhook_id_ultima: webhook.id,
+                                        key_instancia: this.key,
+                                        id_api: idApi,
+                                    })
+                                }
+
+                               
                             }
                             //throw new Error('Mensagem não é minha!')
                         } else {

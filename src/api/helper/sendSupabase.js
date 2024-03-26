@@ -56,6 +56,20 @@ async function getIdConexoes(tableName, condition) {
     }
 }
 
+async function getSingleWebhook(data) {
+    try {
+        const {data, error} = await supabase.from('webhook').select('*').eq('data', data).single()
+        if(error) {
+            return null
+        } else {
+            return data
+        }
+    }catch(error) {
+        console.error('Ocorreu um erro inesperado', error)
+        return null
+    }
+}
+
 async function getSingleConversa(numero, empresaId) {
     try {
         const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at', {ascending: false}).single()
@@ -170,6 +184,7 @@ module.exports = {
     uploadSUp,
     deleteDataFromtable,
     getIdConexoes,
-    getSingleConversa
+    getSingleConversa,
+    getSingleWebhook
 };
 
