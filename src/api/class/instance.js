@@ -56,7 +56,6 @@ class WhatsAppInstance {
     })
 
     constructor(key, allowWebhook, webhook, clientId, empresaId) {
-        console.log('Entrou no constructor')
         this.key = key ? key : uuidv4()
         this.instance.customWebhook = this.webhook ? this.webhook : webhook
         this.empresaId = empresaId
@@ -340,6 +339,7 @@ class WhatsAppInstance {
                             let fileUrl;
                             let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
                             let webhook
+                            console.log({msg})
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
