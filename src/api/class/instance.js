@@ -339,7 +339,7 @@ class WhatsAppInstance {
                             let fileUrl;
                             let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
                             let webhook
-                            console.log({msg})
+                            // console.log({msg})
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
@@ -347,7 +347,7 @@ class WhatsAppInstance {
                                         data: msg,
                                         contatos: msg.key.remoteJid.split('@')[0],
                                         fromMe: false,
-                                        mensagem: msg.message.extendedTextMessage ? msg.message.extendedTextMessage.text : null,
+                                        mensagem: msg.message.conversation ? msg.message.conversation : null,
                                         'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
                                         imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
                                         'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
@@ -363,7 +363,7 @@ class WhatsAppInstance {
                                         data: msg,
                                         contatos: msg.key.remoteJid.split('@')[0],
                                         fromMe: false,
-                                        mensagem: msg.message.extendedTextMessage ? msg.message.extendedTextMessage.text : null,
+                                        mensagem: msg.message.conversation ? msg.message.conversation : null,
                                         'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
                                         imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
                                         'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
@@ -390,7 +390,7 @@ class WhatsAppInstance {
                                     data: msg,
                                     contatos: msg.key.remoteJid.split('@')[0],
                                     fromMe: false,
-                                    mensagem: msg.message.extendedTextMessage.text || null,
+                                    mensagem: msg.message.conversation ? msg.message.conversation : null,
                                     'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
                                     imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
                                     'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
