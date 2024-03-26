@@ -58,7 +58,7 @@ async function getIdConexoes(tableName, condition) {
 
 async function getSingleConversa(numero, empresaId) {
     try {
-        const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at').single()
+        const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at', {ascending: false}).single()
         if(error) {
             return null
         } else {

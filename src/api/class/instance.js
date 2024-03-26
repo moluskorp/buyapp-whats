@@ -363,7 +363,7 @@ class WhatsAppInstance {
                                         data: msg,
                                         contatos: msg.key.remoteJid.split('@')[0],
                                         fromMe: false,
-                                        mensagem: msg.message.extendedTextMessage.text || null,
+                                        mensagem: msg.message.extendedTextMessage ? msg.message.extendedTextMessage.text : null,
                                         'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
                                         imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
                                         'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
