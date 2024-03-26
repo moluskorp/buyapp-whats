@@ -813,7 +813,7 @@ class WhatsAppInstance {
         let newUrl = url
 
         if(type === 'audio') {
-            const fileName = new Date().toTimeString()
+            const fileName = new Date().toISOString()
             const inputPath = path.join(__dirname, `${fileName}.opus`)
             const outputPath = path.join(__dirname, `${fileName}.mp3`)
             
@@ -821,7 +821,6 @@ class WhatsAppInstance {
             await this.convertOpusToMp3(inputPath, outputPath)
             await uploadSUp(outputPath, `${fileName}.mp3`)
             fs.unlinkSync(inputPath)
-            fs.unlinkSync(outputPath)
             newUrl = `https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos/${fileName}.mp3`
         }
 
