@@ -8,7 +8,7 @@ const {
 } = require('@whiskeysockets/baileys')
 const { unlinkSync, writeFileSync } = require('fs')
 const { v4: uuidv4 } = require('uuid')
-const path = require('path')
+const path = require('node:path')
 const processButton = require('../helper/processbtn')
 const generateVC = require('../helper/genVc')
 const Chat = require('../models/chat.model')
@@ -17,6 +17,9 @@ const config = require('../../config/config')
 const downloadMessage = require('../helper/downloadMsg')
 const logger = require('pino')()
 const useMongoDBAuthState = require('../helper/mongoAuthState')
+const fs = require('node:fs')
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegStatic = require('ffmpeg-static');
 
 
 const saveStats = require('../helper/saveStats');
@@ -766,14 +769,67 @@ class WhatsAppInstance {
         return data
     }
 
+    async downloadFile(fileUrl, outputPath) {
+        const writer = fs.createWriteStream(outputPath)
+
+        const response = await axios({
+            url: fileUrl,
+            method: 'GET',
+            responseType: 'stream'
+        })
+
+        response.data.pipe(writer)
+
+        return new Promise((resolve, reject) => {
+            writer.on('finish', resolve)
+            writer.on('error', reject)
+        })
+    }
+
+    async convertOpusToMp3(inputPath, outputPath) {
+        return new Promise((resolve, reject) => {
+            ffmpeg(inputPath)
+            .toFormat('mp3')
+            .on('error', (err) => {
+                console.error('An error occurred: ' + err.message)
+                reject()
+            })
+            .on('progress', (progress) => {
+                console.log('Processing: ', progress.targetSize, ' KB converted')
+            })
+            .on('end', () => {
+                console.log('PRocessing finished')
+                resolve()
+            })
+            .save(outputPath)
+        })
+        
+    }
+
     async sendUrlMediaFile(to, url, type, mimeType, caption = '') {
         await this.verifyId(this.getWhatsAppId(to))
+
+
+        let newUrl = url
+
+        if(type === 'audio') {
+            const fileName = new Date().toTimeString()
+            const inputPath = path.join(__dirname, `${fileName}.opus`)
+            const outputPath = path.join(__dirname, `${fileName}.mp3`)
+            
+            await this.downloadFile(url, inputPath)
+            await this.convertOpusToMp3(inputPath, outputPath)
+            await uploadSUp(outputPath, `${fileName}.mp3`)
+            fs.unlinkSync(inputPath)
+            fs.unlinkSync(outputPath)
+            newUrl = `https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos/${fileName}.mp3`
+        }
 
         const data = await this.instance.sock?.sendMessage(
             this.getWhatsAppId(to),
             {
                 [type]: {
-                    url: url,
+                    url: newUrl,
                 },
                 caption: caption,
                 mimetype: mimeType,
