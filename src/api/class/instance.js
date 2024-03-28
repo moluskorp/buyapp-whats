@@ -315,6 +315,9 @@ class WhatsAppInstance {
             if (m.type === 'prepend'){
                 //Sei la
             }
+
+            console.log('Chegou mensagem')
+            console.log({message: m.messages})
             
             
             this.instance.messages.unshift(...m.messages)
@@ -343,8 +346,6 @@ class WhatsAppInstance {
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
-                                    const webhookExists = getSingleWebhook(msg)
-                                    if(!webhookExists) {
                                         webhook = await sendDataToSupabase('webhook', {
                                             data: msg,
                                             contatos: msg.key.remoteJid.split('@')[0],
@@ -359,16 +360,10 @@ class WhatsAppInstance {
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null
                                         })
                                         await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
-                                    } else {
-                                        await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhookExists.id})
-
-                                    }
                                     
                                     
                                 } else if(conversa.Status === 'Finalizado' || conversa.Status === 'Visualizar') {
                                     await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
-                                    const webhookExists = await getSingleWebhook(msg)
-                                    if(!webhookExists) {
                                         webhook = await sendDataToSupabase('webhook', {
                                             data: msg,
                                             contatos: msg.key.remoteJid.split('@')[0],
@@ -382,7 +377,6 @@ class WhatsAppInstance {
                                             'id_api_conversa' : conversa.id_api,
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null
                                         })
-                                    }
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
                                         numero_contato: wppUser,
@@ -397,8 +391,6 @@ class WhatsAppInstance {
 
                             } else {
                                 await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
-                                const webhookExists = await getSingleWebhook(msg)
-                                if(!webhookExists) {
                                     webhook = await sendDataToSupabase('webhook', {
                                         data: msg,
                                         contatos: msg.key.remoteJid.split('@')[0],
@@ -422,7 +414,6 @@ class WhatsAppInstance {
                                         key_instancia: this.key,
                                         id_api: idApi,
                                     })
-                                }
 
                                
                             }
@@ -433,7 +424,6 @@ class WhatsAppInstance {
                                 await updateDataInTable('conexoes', {id: this.clientId}, {Nome: this.name})
                             }
                         }
-                        this.instance.messages.unshift(...m.messages)
                     }
                     if (config.markMessagesRead) {
                         const unreadMessages = m.messages.map((msg) => {
