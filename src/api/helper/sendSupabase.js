@@ -74,6 +74,7 @@ async function getSingleConversa(numero, empresaId) {
     try {
         const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at', {ascending: false}).single()
         if(error) {
+            console.error('Deu erro no supabase erro: ', error)
             return null
         } else {
             return data

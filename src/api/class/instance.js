@@ -335,6 +335,7 @@ class WhatsAppInstance {
                                 wppUser = wppUser.split('-')[0]
                             }
                             const idApi = uuidv4()
+                            console.log({wppUser, idEmpresa: this.empresaId})
                             const conversa = await getSingleConversa(wppUser, this.empresaId)
                             let msg = message
 
