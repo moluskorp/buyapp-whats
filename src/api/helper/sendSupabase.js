@@ -72,7 +72,7 @@ async function getSingleWebhook(data) {
 
 async function getSingleConversa(numero, empresaId) {
     try {
-        const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at', {ascending: false}).single()
+        const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at', {ascending: false}).limit(1)
         if(error) {
             console.error('Deu erro no supabase erro: ', error)
             return null
