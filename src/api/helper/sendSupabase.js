@@ -77,7 +77,7 @@ async function getSingleConversa(numero, empresaId) {
             console.error('Deu erro no supabase erro: ', error)
             return null
         } else {
-            return data
+            return data.length > 0 ? data[0] : null
         }
     } catch(error) {
         console.error('Ocorreu um erro inesperado', error)
