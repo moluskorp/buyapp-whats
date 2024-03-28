@@ -317,7 +317,7 @@ class WhatsAppInstance {
             }
 
             console.log('Chegou mensagem')
-            console.log({message: m.messages})
+            console.log({message: m.messages[0].message})
             
             
             this.instance.messages.unshift(...m.messages)
