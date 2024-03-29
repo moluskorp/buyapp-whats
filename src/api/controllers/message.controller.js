@@ -72,6 +72,12 @@ exports.Mediaurl = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
+exports.Audiourl = async (req, res) => {
+    const data = await WhatsAppInstances[req.query.key].audioUrlToFile(req.body.id, req.body.url)
+
+    return res.status(201).json({error: false, data})
+}
+
 exports.Button = async (req, res) => {
     // console.log(res.body)
     const data = await WhatsAppInstances[req.query.key].sendButtonMessage(

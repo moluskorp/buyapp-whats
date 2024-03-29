@@ -20,6 +20,7 @@ const useMongoDBAuthState = require('../helper/mongoAuthState')
 const fs = require('node:fs')
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegStatic = require('ffmpeg-static');
+const mime = require('mime-types')
 
 
 const saveStats = require('../helper/saveStats');
@@ -762,6 +763,31 @@ class WhatsAppInstance {
             { text: message }
         )
         return data
+    }
+
+    async audioUrlToFile(to, url) {
+        await this.verifyId(this.getWhatsAppId(to))
+
+        const fileName = new Date().toISOString()
+        const inputPath = path.join(__dirname, `${fileName}.opus`)
+        const outputPath = path.join(__dirname, `${fileName}.mp3`)
+        
+        await this.downloadFile(url, inputPath)
+        await this.convertOpusToMp3(inputPath, outputPath)
+
+        const buffer = fs.readFileSync(outputPath)
+        const mimetype = mime.lookup(outputPath)
+
+        const data = await this.instance.sock?.sendMessage({
+            mimetype,
+            audio: buffer,
+            ptt: true,
+            fileName
+        })
+
+        fs.unlinkSync(inputPath)
+        return data
+        //newUrl = `https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos/${fileName}.mp3`
     }
 
     async sendMediaFile(to, file, type, caption = '', filename) {

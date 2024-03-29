@@ -17,6 +17,7 @@ router.route('/audio').post(keyVerify, loginVerify, upload, trackStats, controll
 router.route('/doc').post(keyVerify, loginVerify, upload, trackStats, controller.Document)
 
 router.route('/mediaurl').post(keyVerify, loginVerify, controller.Mediaurl)
+router.route('/audiourl').post(keyVerify, loginVerify, controller.Audiourl)
 router.route('/button').post(keyVerify, loginVerify, controller.Button)
 router.route('/contact').post(keyVerify, loginVerify, controller.Contact)
 router.route('/list').post(keyVerify, loginVerify, controller.List)
