@@ -769,14 +769,14 @@ class WhatsAppInstance {
         await this.verifyId(this.getWhatsAppId(to))
 
         const fileName = new Date().toISOString()
-        const inputPath = path.join(__dirname, `${fileName}.opus`)
-        const outputPath = path.join(__dirname, `${fileName}.mp3`)
+        const inputPath = path.join(__dirname, `${fileName}.mp3`)
+        //const outputPath = path.join(__dirname, `${fileName}.mp3`)
         
         await this.downloadFile(url, inputPath)
-        await this.convertOpusToMp3(inputPath, outputPath)
+        //await this.convertOpusToMp3(inputPath, outputPath)
 
-        const buffer = fs.readFileSync(outputPath)
-        const mimetype = mime.lookup(outputPath)
+        const buffer = fs.readFileSync(inputPath)
+        const mimetype = mime.lookup(inputPath)
 
         const data = await this.instance.sock?.sendMessage(this.getWhatsAppId(to),{
             mimetype,
