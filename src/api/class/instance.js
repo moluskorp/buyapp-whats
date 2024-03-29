@@ -778,7 +778,7 @@ class WhatsAppInstance {
         const buffer = fs.readFileSync(outputPath)
         const mimetype = mime.lookup(outputPath)
 
-        const data = await this.instance.sock?.sendMessage({
+        const data = await this.instance.sock?.sendMessage(this.getWhatsAppId(to),{
             mimetype,
             audio: buffer,
             ptt: true,
