@@ -150,6 +150,8 @@ async function adicionaRegistro(userNumber, key, idApi, nome) {
 async function uploadSUp(filePath, filename) {
     const fileContent = readFileSync(filePath)
     const storagePath = `arquivos/${filename}`;
+
+    console.log(storagePath)
     
     let { error } = await supabase.storage
     .from('chat')
