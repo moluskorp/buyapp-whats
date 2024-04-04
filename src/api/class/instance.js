@@ -754,7 +754,8 @@ class WhatsAppInstance {
     }
 
     async replyMessage(to, message, content) {
-        const jid = await this.verifyId(this.getWhatsAppId(to))
+        const jid = this.getWhatsAppId(to)
+        await this.verifyId(jid)
 
         const data = await this.instance.sock?.sendMessage(
             jid,
