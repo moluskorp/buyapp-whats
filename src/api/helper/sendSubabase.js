@@ -17,7 +17,7 @@ async function sendDataToSupabase(tableName, data) {
         if(response.error) {
             console.error('Error inserting data:', response.error);
         } else {
-            console.log('Data inserted:', response.data);
+            // oie
         }
     } catch (error) {
         console.error('An unexpected error occurred:', error);

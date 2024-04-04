@@ -184,7 +184,6 @@ exports.contactInfo = async(req, res) => {
         const urlInfo = await jidDecode(
             jid
           )
-        console.log({urlInfo})
         return res.json({
             exists: true,
             data: {

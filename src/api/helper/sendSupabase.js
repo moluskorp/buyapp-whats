@@ -151,8 +151,6 @@ async function uploadSUp(filePath, filename) {
     const fileContent = readFileSync(filePath)
     const storagePath = `arquivos/${filename}`;
 
-    console.log(storagePath)
-    
     let { error } = await supabase.storage
     .from('chat')
     .upload(storagePath, fileContent);

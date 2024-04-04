@@ -1,10 +1,18 @@
 exports.Text = async (req, res) => {
-    console.log('entrou no controller text')
     const data = await WhatsAppInstances[req.query.key].sendTextMessage(
         req.body.id,
         req.body.message
     )
     return res.status(201).json({ error: false, data: data })
+}
+
+exports.Reply = async (req, res) => {
+    const data = await await WhatsAppInstances[req.query.key].replyMessage(
+        req.body.id,
+        req.body.message,
+        req.body.content,
+    )
+    return res.status(201).json({error: false, data: data })
 }
 
 exports.Image = async (req, res) => {
@@ -143,3 +151,4 @@ exports.React = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].reactMessage(req.body.id, req.body.key, req.body.emoji)
     return res.status(201).json({ error: false, data: data })
 }
+

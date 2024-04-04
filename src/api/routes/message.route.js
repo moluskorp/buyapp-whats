@@ -27,6 +27,7 @@ router
     .post(keyVerify, loginVerify, controller.MediaButton)
 router.route("/read").post(keyVerify, loginVerify, controller.Read)
 router.route("/react").post(keyVerify, loginVerify, controller.React)
+router.route('/reply').post(keyVerify, loginVerify, controller.Reply)
 
 module.exports = router
 

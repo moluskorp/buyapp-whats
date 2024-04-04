@@ -88,7 +88,6 @@ class WhatsAppInstance {
     }
     async downloadMessageSup(sock, msg, extension, id) {
         // download the message
-        console.log('Entrou no downloadMessageSup')
         const buffer = await downloadMediaMessage(
             msg,
             'buffer',
@@ -106,7 +105,6 @@ class WhatsAppInstance {
     
         try {
             writeFileSync(path, buffer); // Usa writeFileSync
-            console.log('Arquivo salvo com sucesso!');
             await uploadSUp(path, fileName); // Chama a função corrigida de upload
         } catch (err) {
             console.error(err);
@@ -317,10 +315,6 @@ class WhatsAppInstance {
                 //Sei la
             }
 
-            console.log('Chegou mensagem')
-            console.log({message: m.messages[0].message})
-            
-            
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
             for(const message of m.messages) {
@@ -336,7 +330,6 @@ class WhatsAppInstance {
                                 wppUser = wppUser.split('-')[0]
                             }
                             const idApi = uuidv4()
-                            console.log({wppUser, idEmpresa: this.empresaId})
                             const conversa = await getSingleConversa(wppUser, this.empresaId)
                             let msg = message
 
@@ -344,11 +337,8 @@ class WhatsAppInstance {
                             let fileUrl;
                             let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
                             let webhook
-                            // console.log({msg})
                             if(conversa) {
-                                console.log({status: conversa.Status})
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
-                                    console.log('espera, atendimento ou bot')
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
                                         webhook = await sendDataToSupabase('webhook', {
                                             data: msg,
@@ -394,7 +384,6 @@ class WhatsAppInstance {
                                 }
 
                             } else {
-                                console.log('conversa não existe')
                                 await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
                                     webhook = await sendDataToSupabase('webhook', {
                                         data: msg,
@@ -441,7 +430,6 @@ class WhatsAppInstance {
                         await sock.readMessages(unreadMessages)
                     }
                 }catch(err){
-                    console.log(err.message)
                     // process.exit()
                 }
                
@@ -765,6 +753,17 @@ class WhatsAppInstance {
         return data
     }
 
+    async replyMessage(to, message, content) {
+        const jid = await this.verifyId(this.getWhatsAppId(to))
+
+        const data = await this.instance.sock?.sendMessage(
+            jid,
+            { text: content },
+            { quoted: message }
+        )
+        return data
+    }
+
     async audioUrlToFile(to, url) {
         await this.verifyId(this.getWhatsAppId(to))
 
@@ -831,10 +830,8 @@ class WhatsAppInstance {
                 reject()
             })
             .on('progress', (progress) => {
-                console.log('Processing: ', progress.targetSize, ' KB converted')
             })
             .on('end', () => {
-                console.log('PRocessing finished')
                 resolve()
             })
             .save(outputPath)
@@ -1391,8 +1388,6 @@ class WhatsAppInstance {
     }
 
     async workWithMessageType(messageType, sock, msg, id_api, fileUrl, bucketUrl) {
-        console.log('Entrou no workWithMesageType')
-        console.log({messageType})
         switch(messageType) {
             case 'imageMessage':
                 await this.downloadMessageSup(sock, msg, 'jpeg');
@@ -1416,9 +1411,7 @@ class WhatsAppInstance {
                     
                     break;
             case 'documentMessage':
-                console.log('Entrou no documentMessage')
                 const format = `${msg.message['documentMessage']['mimetype'].split('/')[1]}`
-                console.log({format})
                 await this.downloadMessageSup(sock, msg, format)
     
                 fileUrl = `${bucketUrl}/${msg.key.id}.${format}`
