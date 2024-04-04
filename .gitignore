@@ -129,7 +129,6 @@ dist
 .pnp.*
 
 # outros
-temp/
 
 #Docker Local
 Dockerfile
