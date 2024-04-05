@@ -96,9 +96,15 @@ exports.Button = async (req, res) => {
 }
 
 exports.Contact = async (req, res) => {
+    const vCard = {
+        fullName: req.body.fullName,
+        organization: req.body.organization,
+        phoneNumber: req.body.phoneNumber
+    }
+
     const data = await WhatsAppInstances[req.query.key].sendContactMessage(
         req.body.id,
-        req.body.vcard
+        vCard
     )
     return res.status(201).json({ error: false, data: data })
 }
