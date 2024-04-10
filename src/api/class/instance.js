@@ -333,9 +333,7 @@ class WhatsAppInstance {
                                 wppUser = wppUser.split('-')[0]
                             }
                             const idApi = uuidv4()
-                            console.log('antes conversa: ', this.empresaId)
                             const conversa = await getSingleConversa(wppUser, this.empresaId)
-                            console.log('depois conversa')
                             let msg = message
 
                             let fileName;
@@ -344,7 +342,7 @@ class WhatsAppInstance {
                             let webhook
 
                             let quotedId
-                            if(message.extendedTextMessage && message.extendedTExtMessage.contextInfo.quotedMessage){
+                            if(message.extendedTextMessage && message.extendedTextMessage.contextInfo.quotedMessage){
                                 console.log('entrou no if')
                                 quotedId = await getIdWebHookMessage(message.extendedTextMessage.contextInfo.stanzaId).id
                                 console.log({quotedId})
