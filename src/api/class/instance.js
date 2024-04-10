@@ -315,6 +315,8 @@ class WhatsAppInstance {
                 //Sei la
             }
 
+            console.log({m})
+
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
             for(const message of m.messages) {
@@ -751,6 +753,26 @@ class WhatsAppInstance {
             { text: message }
         )
         return data
+    }
+
+    async getGroups() {
+        const data = await this.instance.sock?.groupFetchAllParticipating()
+
+        let resultado = null
+
+        for(let chave in data) {
+            if (data[chave].subject === 'Arquivos') {
+                resultado = {
+                    name: data[chave].subject,
+                    jid: chave
+                }
+                break;
+            }
+        }
+
+        console.log({resultado})
+
+        return resultado
     }
 
     async replyMessage(to, message, content) {

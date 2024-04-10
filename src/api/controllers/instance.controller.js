@@ -142,6 +142,11 @@ exports.delete = async (req, res) => {
     })
 }
 
+exports.getGroups = async (req, res) => {
+    const instance = WhatsAppInstances[req.query.key]
+    await instance.getGroups()
+}
+
 
 exports.list = async (req, res) => {
     if (req.query.active) {
