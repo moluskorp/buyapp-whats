@@ -315,9 +315,7 @@ class WhatsAppInstance {
                 //Sei la
             }
 
-            console.log({m: m.messages[0]})
-            console.log({extendedTextMessage: m.messages[0].message.extendedTextMessage})
-            console.log({quotedMessage: m.messages[0].message.extendedTextMessage.contextInfo.quotedMessage})
+            
 
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
@@ -329,6 +327,9 @@ class WhatsAppInstance {
                     const messageType = Object.keys(message.message)[0]
                     if(!isGroup && !isStatus) {
                         if(!message.key.fromMe) {
+                            console.log({m: m.messages[0]})
+                            console.log({extendedTextMessage: m.messages[0].message.extendedTextMessage})
+                            console.log({quotedMessage: m.messages[0].message.extendedTextMessage.contextInfo.quotedMessage})
                             let wppUser = remoteJid.split('@')[0]
                             if(wppUser.includes('-')) {
                                 wppUser = wppUser.split('-')[0]
