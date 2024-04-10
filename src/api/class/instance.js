@@ -355,8 +355,8 @@ class WhatsAppInstance {
 
                                 if(match) {
                                     const number = match[1]
-                                    console.log({displayName, number})
                                     const contact = await getContato(number, this.empresaId)
+                                    console.log({contact})
                                     if(!contact) {
                                         const newContact = await sendDataToSupabase('contatos', {
                                             nome: displayName,
