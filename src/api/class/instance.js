@@ -359,13 +359,17 @@ class WhatsAppInstance {
                                     if(!contact) {
                                         let numeroFormatado
                                         let numeroLocal = number.substring(2)
+                                        console.log({numeroLocal})
                                         if(numeroLocal.length === 11) {
+                                            console.log('11')
                                             numeroFormatado = `(${numeroLocal.subsstring(0,2)})${numeroLocal.substring(2,7)}-${numeroLocal.substring(7)}`
                                         } else if(numeroLocal.length === 10) {
+                                            console.log('10')
                                             numeroFormatado = `(${numeroLocal.subsstring(0,2)})${numeroLocal.substring(2,6)}-${numeroLocal.substring(6)}`
                                         } else {
                                             numeroFormatado = number
                                         }
+                                        console.log({numeroFormatado})
                                         const newContact = await sendDataToSupabase('contatos', {
                                             nome: displayName,
                                             numero: number,
