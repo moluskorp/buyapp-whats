@@ -317,7 +317,7 @@ class WhatsAppInstance {
 
             console.log({m: m.messages[0]})
             console.log({extendedTextMessage: m.messages[0].message.extendedTextMessage})
-            console.log({quotedMessage: m.messages[0].message.extendedTextMessage.quotedMessage})
+            console.log({quotedMessage: m.messages[0].message.extendedTextMessage.contextInfo.quotedMessage})
 
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
