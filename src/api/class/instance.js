@@ -342,6 +342,7 @@ class WhatsAppInstance {
                             let webhook
 
                             let quotedId
+                            let contactId
                             if(message.message.extendedTextMessage && message.message.extendedTextMessage.contextInfo.quotedMessage){
                                 const webhook  = await getIdWebHookMessage(message.message.extendedTextMessage.contextInfo.stanzaId)
                                 quotedId = webhook.id
@@ -351,20 +352,22 @@ class WhatsAppInstance {
                                 const contact = message.message.contactMessage
                                 const displayName = contact.displayName
                                 const match = contact.vcard.match(waidRegex)
-                                console.log({contact})
 
-                                // if(match) {
-                                //     const number = match[1]
-                                //     console.log({displayName, number})
-                                //     const contact = await getContato(number, this.empresaId)
-                                //     if(!contact) {
-                                //         const newContact = sendDataToSupabase('contatos', {
-                                //             nome: displayName,
-                                //             numero: number,
+                                if(match) {
+                                    const number = match[1]
+                                    console.log({displayName, number})
+                                    const contact = await getContato(number, this.empresaId)
+                                    if(!contact) {
+                                        const newContact = await sendDataToSupabase('contatos', {
+                                            nome: displayName,
+                                            numero: number,
 
-                                //         })
-                                //     }
-                                // }
+                                        })
+                                        contactId = newContact.id
+                                    } else {
+                                        contactId = contact.id
+                                    }
+                                }
                             }
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
@@ -382,7 +385,8 @@ class WhatsAppInstance {
                                             'id_api_conversa' : conversa.id_api,
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
                                             idMensagem: msg.key.id,
-                                            replyWebhook: quotedId
+                                            replyWebhook: quotedId,
+                                            id_contato_webhook: contactId
                                         })
                                         await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                                     
@@ -402,7 +406,8 @@ class WhatsAppInstance {
                                             'id_api_conversa' : conversa.id_api,
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
                                             idMensagem: msg.key.id,
-                                            replyWebhook: quotedId
+                                            replyWebhook: quotedId,
+                                            id_contato_webhook: contactId
                                         })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
@@ -431,7 +436,8 @@ class WhatsAppInstance {
                                         'id_api_conversa' : idApi,
                                         video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
                                         idMensagem: msg.key.id,
-                                        replyWebhook: quotedId
+                                        replyWebhook: quotedId,
+                                        id_contato_webhook: contactId
                                     })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
