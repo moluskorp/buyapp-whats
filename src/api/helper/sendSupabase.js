@@ -56,6 +56,21 @@ async function getIdConexoes(tableName, condition) {
     }
 }
 
+async function getIdWebHookMessage(id) {
+    try{
+        const {data, error} = await supabase.from('webhook').select('*').eq('idMensagem', id).order('created_at', {ascending: false}).limit(1)
+        if(error){
+            console.error('Deu erro no supabase: ', error)
+            return null
+        }
+        return data.length > 0 ? data[0] : null
+    } catch(error) {
+        console.error('Ocorreu um erro inesperado', error)
+        return null
+    }
+
+}
+
 async function getSingleWebhook(data) {
     try {
         const {data, error} = await supabase.from('webhook').select('*').eq('data', data).single()
@@ -186,6 +201,7 @@ module.exports = {
     deleteDataFromtable,
     getIdConexoes,
     getSingleConversa,
-    getSingleWebhook
+    getSingleWebhook,
+    getIdWebHookMessage
 };
 

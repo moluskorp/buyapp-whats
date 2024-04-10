@@ -24,7 +24,7 @@ const mime = require('mime-types')
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook} = require('../helper/sendSupabase');
+const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook, getIdWebHookMessage} = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -327,9 +327,7 @@ class WhatsAppInstance {
                     const messageType = Object.keys(message.message)[0]
                     if(!isGroup && !isStatus) {
                         if(!message.key.fromMe) {
-                            console.log({m: m.messages[0]})
-                            console.log({extendedTextMessage: m.messages[0].message.extendedTextMessage})
-                            console.log({quotedMessage: m.messages[0].message.extendedTextMessage.contextInfo.quotedMessage})
+                            
                             let wppUser = remoteJid.split('@')[0]
                             if(wppUser.includes('-')) {
                                 wppUser = wppUser.split('-')[0]
@@ -342,6 +340,12 @@ class WhatsAppInstance {
                             let fileUrl;
                             let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
                             let webhook
+
+                            let quotedId
+                            if(message.extendedTextMessage && message.extendedTExtMessage.contextInfo.quotedMessage){
+                                quotedId = await getIdWebHookMessage(message.extendedTextMessage.contextInfo.stanzaId).id
+                                console.log({quotedId})
+                            }
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
@@ -356,7 +360,8 @@ class WhatsAppInstance {
                                             file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
                                             'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
                                             'id_api_conversa' : conversa.id_api,
-                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
+                                            idMensagem: msg.key.id
                                         })
                                         await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                                     
@@ -374,7 +379,8 @@ class WhatsAppInstance {
                                             file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
                                             'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
                                             'id_api_conversa' : conversa.id_api,
-                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
+                                            idMensagem: msg.key.id
                                         })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
@@ -401,7 +407,8 @@ class WhatsAppInstance {
                                         file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
                                         'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
                                         'id_api_conversa' : idApi,
-                                        video: msg.message.videoMessage ? msg.message.videoMessage.url : null
+                                        video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
+                                        idMensagem: msg.key.id
                                     })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
