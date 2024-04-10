@@ -333,7 +333,9 @@ class WhatsAppInstance {
                                 wppUser = wppUser.split('-')[0]
                             }
                             const idApi = uuidv4()
+                            console.log('antes conversa: ', this.empresaId)
                             const conversa = await getSingleConversa(wppUser, this.empresaId)
+                            console.log('depois conversa')
                             let msg = message
 
                             let fileName;
@@ -347,7 +349,6 @@ class WhatsAppInstance {
                                 quotedId = await getIdWebHookMessage(message.extendedTextMessage.contextInfo.stanzaId).id
                                 console.log({quotedId})
                             }
-                            console.log({id: msg.key.id})
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
