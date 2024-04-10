@@ -361,7 +361,8 @@ class WhatsAppInstance {
                                             'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
                                             'id_api_conversa' : conversa.id_api,
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
-                                            idMensagem: msg.key.id
+                                            idMensagem: msg.key.id,
+                                            replyWebhook: quotedId
                                         })
                                         await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                                     
@@ -380,7 +381,8 @@ class WhatsAppInstance {
                                             'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
                                             'id_api_conversa' : conversa.id_api,
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
-                                            idMensagem: msg.key.id
+                                            idMensagem: msg.key.id,
+                                            replyWebhook: quotedId
                                         })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
@@ -408,7 +410,8 @@ class WhatsAppInstance {
                                         'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
                                         'id_api_conversa' : idApi,
                                         video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
-                                        idMensagem: msg.key.id
+                                        idMensagem: msg.key.id,
+                                        replyWebhook: quotedId
                                     })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
