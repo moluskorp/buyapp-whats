@@ -342,6 +342,7 @@ class WhatsAppInstance {
                             let webhook
 
                             let quotedId
+                            console.log({message})
                             console.log({extended: message.extendedTextMessage})
                             console.log({quoted: message.extendedTextMessage.contextInfo.quotedMessage})
                             if(message.extendedTextMessage && message.extendedTextMessage.contextInfo.quotedMessage){
