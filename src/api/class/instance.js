@@ -347,6 +347,7 @@ class WhatsAppInstance {
                                 quotedId = await getIdWebHookMessage(message.extendedTextMessage.contextInfo.stanzaId).id
                                 console.log({quotedId})
                             }
+                            console.log({id: msg.key.id})
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
