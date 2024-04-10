@@ -360,13 +360,12 @@ class WhatsAppInstance {
                                         let numeroFormatado
                                         let numeroLocal = number.substring(2)
                                         if(numeroLocal.length === 11) {
-                                            numeroFormatado = `(${numeroLocal.substring(0,2)})${numeroLocal.substring(2,7)}-${numeroLocal.substring(7)}`
+                                            numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,7)}-${numeroLocal.substring(7)}`
                                         } else if(numeroLocal.length === 10) {
-                                            numeroFormatado = `(${numeroLocal.substring(0,2)})${numeroLocal.substring(2,6)}-${numeroLocal.substring(6)}`
+                                            numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,6)}-${numeroLocal.substring(6)}`
                                         } else {
                                             numeroFormatado = number
                                         }
-                                        console.log({numeroFormatado})
                                         const newContact = await sendDataToSupabase('contatos', {
                                             nome: displayName,
                                             numero: number,
