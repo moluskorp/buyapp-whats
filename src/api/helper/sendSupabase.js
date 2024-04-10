@@ -58,10 +58,7 @@ async function getIdConexoes(tableName, condition) {
 
 async function getIdWebHookMessage(id) {
     try{
-        console.log('entramos no supa')
         const {data, error} = await supabase.from('webhook').select('*').eq('idMensagem', id).order('created_at', {ascending: false}).limit(1)
-        console.log({data, error})
-
         if(error){
             console.error('Deu erro no supabase: ', error)
             return null
