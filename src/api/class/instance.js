@@ -344,7 +344,7 @@ class WhatsAppInstance {
                             let quotedId
                             if(message.message.extendedTextMessage && message.message.extendedTextMessage.contextInfo.quotedMessage){
                                 const oi  = await getIdWebHookMessage(message.message.extendedTextMessage.contextInfo.stanzaId)
-                                console.log({oi})
+                                console.log({oi: oi.id})
                             }
                             console.log({quotedId})
                             if(conversa) {
