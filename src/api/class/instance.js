@@ -346,8 +346,17 @@ class WhatsAppInstance {
                                 const webhook  = await getIdWebHookMessage(message.message.extendedTextMessage.contextInfo.stanzaId)
                                 quotedId = webhook.id
                             }
-                            console.log({message})
-                            console.log({contactMessage: message.message.contactMessage})
+                            if(message.message.contactMessage){
+                                const waidRegex = /waid=(\d+):/
+                                const contact = message.message.contactMessage
+                                const displayName = contact.displayName
+                                const match = contact.vcard.match(waidRegex)
+
+                                if(match) {
+                                    const number = match[1]
+                                    console.log({displayName, number})
+                                }
+                            }
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
