@@ -24,7 +24,7 @@ const mime = require('mime-types')
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook, getIdWebHookMessage} = require('../helper/sendSupabase');
+const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook, getIdWebHookMessage, getContato} = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -351,11 +351,20 @@ class WhatsAppInstance {
                                 const contact = message.message.contactMessage
                                 const displayName = contact.displayName
                                 const match = contact.vcard.match(waidRegex)
+                                console.log({contact})
 
-                                if(match) {
-                                    const number = match[1]
-                                    console.log({displayName, number})
-                                }
+                                // if(match) {
+                                //     const number = match[1]
+                                //     console.log({displayName, number})
+                                //     const contact = await getContato(number, this.empresaId)
+                                //     if(!contact) {
+                                //         const newContact = sendDataToSupabase('contatos', {
+                                //             nome: displayName,
+                                //             numero: number,
+
+                                //         })
+                                //     }
+                                // }
                             }
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
