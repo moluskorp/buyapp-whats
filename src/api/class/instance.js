@@ -315,7 +315,7 @@ class WhatsAppInstance {
                 //Sei la
             }
 
-            console.log({m})
+            console.log({m: m.messages[0]})
 
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
