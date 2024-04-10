@@ -362,7 +362,8 @@ class WhatsAppInstance {
                                         const newContact = await sendDataToSupabase('contatos', {
                                             nome: displayName,
                                             numero: number,
-                                            ref_empresa: this.empresaId
+                                            ref_empresa: this.empresaId,
+                                            status_conversa: 'Visualizar'
                                         })
                                         contactId = newContact.id
                                     } else {
