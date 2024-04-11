@@ -326,7 +326,7 @@ class WhatsAppInstance {
                     const messageType = Object.keys(message.message)[0]
                     if(!isGroup && !isStatus) {
                         if(!message.key.fromMe) {
-                            console.log({message})
+                            
                             
                             let wppUser = remoteJid.split('@')[0]
                             if(wppUser.includes('-')) {
@@ -343,10 +343,12 @@ class WhatsAppInstance {
 
                             let quotedId
                             let contactId
+
                             if(message.message.extendedTextMessage && message.message.extendedTextMessage.contextInfo.quotedMessage){
                                 const webhook  = await getIdWebHookMessage(message.message.extendedTextMessage.contextInfo.stanzaId)
                                 quotedId = webhook.id
                             }
+
                             if(message.message.contactMessage){
                                 const waidRegex = /waid=(\d+):/
                                 const contact = message.message.contactMessage
@@ -379,6 +381,13 @@ class WhatsAppInstance {
                                     }
                                 }
                             }
+
+
+                            if(message.message.protocolMessage){
+                            console.log({message: message.message.protocolMessage})
+
+                            }
+
                             if(conversa) {
                                 if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
                                     await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
