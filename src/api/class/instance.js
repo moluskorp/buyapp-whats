@@ -315,7 +315,6 @@ class WhatsAppInstance {
                 //Sei la
             }
 
-            console.log({m})
 
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
@@ -327,6 +326,7 @@ class WhatsAppInstance {
                     const messageType = Object.keys(message.message)[0]
                     if(!isGroup && !isStatus) {
                         if(!message.key.fromMe) {
+                            console.log({m})
                             
                             let wppUser = remoteJid.split('@')[0]
                             if(wppUser.includes('-')) {
