@@ -315,6 +315,8 @@ class WhatsAppInstance {
                 //Sei la
             }
 
+            
+
 
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
@@ -384,8 +386,8 @@ class WhatsAppInstance {
 
 
                             if(message.message.protocolMessage){
-                            console.log({message: message.message.protocolMessage})
-
+                                console.log({message: message.message.protocolMessage})
+                                return
                             }
 
                             if(conversa) {
