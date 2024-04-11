@@ -7,7 +7,8 @@ exports.Text = async (req, res) => {
 }
 
 exports.DeleteMesage = async (req, res) => {
-    const data = await WhatsAppInstances[req.query.key].deleteMesage(
+    console.log('controller')
+    const data = await WhatsAppInstances[req.query.key].deleteMessage(
         req.body.id,
         req.body.data
     )

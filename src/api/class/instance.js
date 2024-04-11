@@ -817,7 +817,8 @@ class WhatsAppInstance {
         return data
     }
 
-    async deleteMesage(to, dataWebhook) {
+    async deleteMessage(to, dataWebhook) {
+        console.log('entrou na função')
         const wid = this.getWhatsAppId(to)
         await this.verifyId(wid)
         const data = JSON.parse(dataWebhook)
