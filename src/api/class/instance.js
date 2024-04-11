@@ -817,12 +817,9 @@ class WhatsAppInstance {
         return data
     }
 
-    async deleteMessage(to, dataWebhook) {
+    async deleteMessage(to, data) {
         const wid = this.getWhatsAppId(to)
         await this.verifyId(wid)
-        console.log({dataWebhook})
-        const data = JSON.parse(dataWebhook)
-        console.log({data})
         const deletedMessage = await this.instance.sock?.sendMessage(
             wid, {delete: data.key}
         )
