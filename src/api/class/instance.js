@@ -804,6 +804,16 @@ class WhatsAppInstance {
         return data
     }
 
+    async deleteMesage(to, dataWebhook) {
+        const wid = this.getWhatsAppId(to)
+        await this.verifyId(wid)
+        const data = JSON.parse(dataWebhook)
+        const deletedMessage = await this.instance.sock?.sendMessage(
+            wid, {delete: data.key}
+        )
+        return deletedMessage
+    }
+
     async getGroups() {
         const data = await this.instance.sock?.groupFetchAllParticipating()
 

@@ -6,6 +6,14 @@ exports.Text = async (req, res) => {
     return res.status(201).json({ error: false, data: data })
 }
 
+exports.DeleteMesage = async (req, res) => {
+    const data = await WhatsAppInstances[req.query.key].deleteMesage(
+        req.body.id,
+        req.body.data
+    )
+    return res.status(201).json({error: false, data})
+}
+
 exports.Reply = async (req, res) => {
     const data = await await WhatsAppInstances[req.query.key].replyMessage(
         req.body.id,
