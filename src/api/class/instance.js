@@ -387,7 +387,10 @@ class WhatsAppInstance {
 
                             if(message.message.protocolMessage){
                                 console.log({message: message.message.protocolMessage})
-                                return
+                                const { protocolMessage } = message.message
+                                const webhook = await getIdWebHookMessage(protocolMessage.key.id)
+                                await updateDataInTable('webhook', {id: webhook.id}, {deletada: true})
+                                
                             }
 
                             if(conversa) {
