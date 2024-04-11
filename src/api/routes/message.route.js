@@ -15,7 +15,7 @@ router.route('/image').post(keyVerify, loginVerify, upload, trackStats, controll
 router.route('/video').post(keyVerify, loginVerify, upload, trackStats, controller.Video)
 router.route('/audio').post(keyVerify, loginVerify, upload, trackStats, controller.Audio)
 router.route('/doc').post(keyVerify, loginVerify, upload, trackStats, controller.Document)
-router.route('/message').delete(keyVerify, loginVerify, upload, trackStats, controller.DeleteMesage)
+router.route('/').delete(keyVerify, loginVerify, upload, trackStats, controller.DeleteMesage)
 
 router.route('/meDiaurl').post(keyVerify, loginVerify, controller.Mediaurl)
 router.route('/audiourl').post(keyVerify, loginVerify, controller.Audiourl)
