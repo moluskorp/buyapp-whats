@@ -15,7 +15,6 @@ router.route('/image').post(keyVerify, loginVerify, upload, trackStats, controll
 router.route('/video').post(keyVerify, loginVerify, upload, trackStats, controller.Video)
 router.route('/audio').post(keyVerify, loginVerify, upload, trackStats, controller.Audio)
 router.route('/doc').post(keyVerify, loginVerify, upload, trackStats, controller.Document)
-router.route('/').delete(keyVerify, loginVerify, trackStats, controller.DeleteMesage)
 
 router.route('/meDiaurl').post(keyVerify, loginVerify, controller.Mediaurl)
 router.route('/audiourl').post(keyVerify, loginVerify, controller.Audiourl)
@@ -29,6 +28,8 @@ router
 router.route("/read").post(keyVerify, loginVerify, controller.Read)
 router.route("/react").post(keyVerify, loginVerify, controller.React)
 router.route('/reply').post(keyVerify, loginVerify, controller.Reply)
+router.route('/delete').post(keyVerify, loginVerify, controller.DeleteMesage)
+
 
 module.exports = router
 
