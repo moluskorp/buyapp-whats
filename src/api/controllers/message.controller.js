@@ -3,7 +3,10 @@ exports.Text = async (req, res) => {
         req.body.id,
         req.body.message
     )
-    return res.status(201).json({ error: false, data: data })
+    return res.status(201).json({ error: false, data: {
+        key: data.key,
+        message: data.message
+    } })
 }
 
 exports.DeleteMesage = async (req, res) => {
