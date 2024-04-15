@@ -24,7 +24,7 @@ const mime = require('mime-types')
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook, getIdWebHookMessage, getContato} = require('../helper/sendSupabase');
+const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook, getIdWebHookMessage, getContato, fetchSetores} = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -189,10 +189,19 @@ class WhatsAppInstance {
             } else if (connection === 'open') {
                 if(this.instance.conexaoId){
                     await updateDataInTable('conexoes', {id: this.instance.conexaoId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: ''})
-                    await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: this.key})
-                        await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: this.key})
-                        await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
-                        await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
+                    const setores = await fetchSetores(this.empresaId)
+                    for(const setor of setores) {
+                        await sendDataToSupabase('setor_conexao', {
+                            id_setor: setor.id,
+                            id_conexao: this.instance.conexaoId,
+                            id_empresa: this.empresaId,
+                            keyConexao: this.key
+                        })
+                    }
+                    // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: this.key})
+                        // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: this.key})
+                        // await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
+                        // await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
                     setTimeout(async () => {
                         this.updateIntanceInfo()
                     }, 9000);

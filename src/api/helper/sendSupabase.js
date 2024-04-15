@@ -41,6 +41,21 @@ async function fetchAllDataFromTable(tableName) {
     }
 }
 
+async function fetchSetores(empresaId) {
+    try {
+        const {data, error} = await supabase.from('Setores').select('*').eq('id_empresas', empresaId).order('created_at', {ascending: false})
+        if(error) {
+            console.error('Deu erro no supabase erro: ', error)
+            return null
+        } else {
+            return data.length > 0 ? data : null
+        }
+    } catch(error) {
+        console.error('Ocorreu um erro inesperado', error)
+        return null
+    }
+}
+
 async function getIdConexoes(tableName, condition) {
     try {
         const {data, error} = await supabase.from(tableName).select('id, id_empresa, Nome').eq('instance_key', condition).single()
@@ -217,6 +232,7 @@ module.exports = {
     getSingleConversa,
     getSingleWebhook,
     getIdWebHookMessage,
-    getContato
+    getContato,
+    fetchSetores
 };
 
