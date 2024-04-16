@@ -410,7 +410,7 @@ class WhatsAppInstance {
                                             idMensagem: msg.key.id,
                                             replyWebhook: quotedId,
                                             id_contato_webhook: contactId,
-                                            instanceKey: this.key
+                                            instance_key: this.key
                                         })
                                         await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                                     
@@ -432,7 +432,7 @@ class WhatsAppInstance {
                                             idMensagem: msg.key.id,
                                             replyWebhook: quotedId,
                                             id_contato_webhook: contactId,
-                                            instanceKey: this.key
+                                            instance_key: this.key
                                         })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
@@ -472,7 +472,7 @@ class WhatsAppInstance {
                                     idMensagem: msg.key.id,
                                     replyWebhook: quotedId,
                                     id_contato_webhook: contactId,
-                                    instanceKey: this.key
+                                    instance_key: this.key
                                 })
                                 await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                             }
