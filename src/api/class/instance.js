@@ -24,7 +24,7 @@ const mime = require('mime-types')
 
 
 const saveStats = require('../helper/saveStats');
-const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook, getIdWebHookMessage, getContato, fetchSetores} = require('../helper/sendSupabase');
+const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, deleteDataFromtable, updateDataInTable, getIdConexoes, getSingleConversa, getSingleWebhook, getIdWebHookMessage, getContato, fetchSetores, getConexao} = require('../helper/sendSupabase');
 
 class WhatsAppInstance {
     socketConfig = {
@@ -507,157 +507,6 @@ class WhatsAppInstance {
                 }
                
             }
-
-            // https://adiwajshing.github.io/Baileys/#reading-messages
-            // if (config.markMessagesRead) {
-            //     const unreadMessages = m.messages.map((msg) => {
-            //         return {
-            //             remoteJid: msg.key.remoteJid,
-            //             id: msg.key.id,
-            //             participant: msg.key?.participant,
-            //         }
-            //     })
-            //     await sock.readMessages(unreadMessages)
-            // }
-
-            // this.instance.messages.unshift(...m.messages)
-
-            // m.messages.map(async (msg) => {
-            //     if (!msg.message) return
-		
-		    //     const isGroupMessage = msg.key.remoteJid.endsWith('@g.us');
-            //     const messageType = Object.keys(msg.message)[0]
-
-            //     if (!isGroupMessage) {
-			// if (msg.key.fromMe != true) { 
-            //         const remoteJid = msg.key.remoteJid;
-            //         let wppUser = remoteJid.split('@')[0];
-
-            //         if (wppUser.includes('-')) {
-            //             wppUser = wppUser.split('-')[0];
-            //         }
-            //         const idApi = uuidv4() 
-            //         const userData = await adicionaRegistro(wppUser, this.key, idApi, msg.pushName)
-            //         console.log(userData)
-            //         const conversaId = userData[0].id_api;
-            //         msg.key['conversaId'] = conversaId;
-			// }
-
-            //         let fileName;
-            //         let fileUrl;
-            //         let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
-            //        console.log(msg);
-			// switch (messageType) {
-            //             case 'imageMessage':
-            //                 await this.downloadMessageSup(sock, msg, 'jpeg');
-                            
-            //                 fileUrl = `${bucketUrl}/${msg.key.id}.jpeg`
-            //                 msg.message['imageMessage']['url'] = fileUrl
-                            
-            //                 break;
-            //             case 'videoMessage':
-            //                 await this.downloadMessageSup(sock, msg, 'mp4');
-                            
-            //                 fileUrl = `${bucketUrl}/${fileName}${msg.key.id}.mp4`
-            //                 msg.message['videoMessage']['url'] = fileUrl
-                            
-            //                 break;
-            //             case 'audioMessage':
-            //                 await this.downloadMessageSup(sock, msg, 'mp3');
-                            
-            //                 fileUrl = `${bucketUrl}/${msg.key.id}.mp3`
-            //                 msg.message['audioMessage']['url'] = fileUrl
-                            
-            //                 break;
-            //             case 'documentMessage':
-            //                 const format = `${msg.message['documentMessage']['mimetype'].split('/')[1]}`
-            //                 await this.downloadMessageSup(sock, msg, format)
-    
-            //                 fileUrl = `${bucketUrl}/${msg.key.id}.${format}`
-			// 	            console.log(fileUrl)
-            //                 msg.message['documentMessage']['url'] = fileUrl
-    
-            //                 break
-            //         }
-            //     }
-            //     if (
-            //         [
-            //             'protocolMessage',
-            //             'senderKeyDistributionMessage',
-            //         ].includes(messageType)
-            //     )
-            //         return
-
-            //     const webhookData = {
-            //         key: this.key,
-            //         ...msg,
-            //     }
-
-            //     if (messageType === 'conversation') {
-            //         webhookData['text'] = m
-            //     }
-            //     if (config.webhookBase64) {
-            //         switch (messageType) {
-            //             case 'imageMessage':
-            //                 webhookData['msgContent'] = await downloadMessage(
-            //                     msg.message.imageMessage,
-            //                     'image'
-            //                 )
-            //                 saveStats(this.key, 'image', 'received') 
-            //                 .then(() => {
-            //                     logger.info("Foi...")  
-            //                 })
-            //                 .catch(err => {
-            //                     console.error(err);
-            //                 });
-                            
-            //                 break
-            //             case 'videoMessage':
-            //                 webhookData['msgContent'] = await downloadMessage(
-            //                     msg.message.videoMessage,
-            //                     'video'
-            //                 )
-            //                 saveStats(this.key, 'video', 'received')
-            //                 .then(() => {
-            //                     logger.info("Foi...")  
-            //                 })
-            //                 .catch(err => {
-            //                     console.error(err);
-            //                 });
-            //                 break
-            //             case 'audioMessage':
-            //                 webhookData['msgContent'] = await downloadMessage(
-            //                     msg.message.audioMessage,
-            //                     'audio'
-            //                 )
-            //                 saveStats(this.key, 'audio', 'received')
-            //                 .then(() => {
-            //                     logger.info("Foi...")  
-            //                 })
-            //                 .catch(err => {
-            //                     console.error(err);
-            //                 });  
-            //                 break
-            //             default:
-            //                 webhookData['msgContent'] = ''
-            //                 saveStats(this.key, 'text', 'received')
-            //                 .then(() => {
-            //                     logger.info("Foi...")  
-            //                 })
-            //                 .catch(err => {
-            //                     console.error(err);
-            //                 });  
-            //                 break
-            //         }
-            //     }
-            //     if (
-            //         ['all', 'messages', 'messages.upsert'].some((e) =>
-            //             config.webhookAllowedEvents.includes(e)
-            //         )
-            //     )
-            //         await this.SendWebhook('message', webhookData, this.key)
-            //         await sendDataToSupabase('webhook', { data: webhookData });
-            // })
         })
 
         sock?.ev.on('messages.update', async (messages) => {
@@ -800,6 +649,11 @@ class WhatsAppInstance {
             const {id, name} = user
             const phone = id.split('@')[0].split(':')[0]
             this.name = name
+            const conexao = await getConexao(phone, this.empresaId)
+            if(conexao) {
+                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado'})    
+                return
+            }
             await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone})
     }
 
