@@ -409,7 +409,8 @@ class WhatsAppInstance {
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
                                             idMensagem: msg.key.id,
                                             replyWebhook: quotedId,
-                                            id_contato_webhook: contactId
+                                            id_contato_webhook: contactId,
+                                            instanceKey: this.key
                                         })
                                         await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                                     
@@ -430,7 +431,8 @@ class WhatsAppInstance {
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
                                             idMensagem: msg.key.id,
                                             replyWebhook: quotedId,
-                                            id_contato_webhook: contactId
+                                            id_contato_webhook: contactId,
+                                            instanceKey: this.key
                                         })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
@@ -469,7 +471,8 @@ class WhatsAppInstance {
                                     video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
                                     idMensagem: msg.key.id,
                                     replyWebhook: quotedId,
-                                    id_contato_webhook: contactId
+                                    id_contato_webhook: contactId,
+                                    instanceKey: this.key
                                 })
                                 await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                             }
