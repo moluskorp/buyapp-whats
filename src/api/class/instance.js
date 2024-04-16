@@ -643,7 +643,7 @@ class WhatsAppInstance {
         const conexao = await getConexao(phone, this.empresaId)
         if(conexao) {
             if(conexao.status_conexao !== 'desconectado'){
-                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado'})    
+                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})    
                 return
             }
         }
