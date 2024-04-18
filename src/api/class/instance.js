@@ -649,18 +649,30 @@ class WhatsAppInstance {
             if(conexao.status_conexao !== 'desconectado'){
                 await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})    
                 return
+            } else {
+                const setores = await fetchSetores(this.empresaId)
+                for(const setor of setores) {
+                    await sendDataToSupabase('setor_conexao', {
+                        id_setor: setor.id,
+                        id_conexao: this.clientId,
+                        id_empresa: this.empresaId,
+                        keyConexao: this.key
+                    })
+                }
+            }
+        } else {
+            await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: '', Nome: name, 'Número': phone})
+            const setores = await fetchSetores(this.empresaId)
+            for(const setor of setores) {
+                await sendDataToSupabase('setor_conexao', {
+                    id_setor: setor.id,
+                    id_conexao: this.clientId,
+                    id_empresa: this.empresaId,
+                    keyConexao: this.key
+                })
             }
         }
-        await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: '', Nome: name, 'Número': phone})
-        const setores = await fetchSetores(this.empresaId)
-        for(const setor of setores) {
-            await sendDataToSupabase('setor_conexao', {
-                id_setor: setor.id,
-                id_conexao: this.clientId,
-                id_empresa: this.empresaId,
-                keyConexao: this.key
-            })
-        }
+        
     }
 
     getWhatsAppId(id) {
