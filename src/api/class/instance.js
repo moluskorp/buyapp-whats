@@ -458,6 +458,7 @@ class WhatsAppInstance {
                                     ref_empresa: this.empresaId,
                                     key_instancia: this.key,
                                     id_api: idApi,
+                                    Status: 'Bot'
                                 })
                                 await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
                                 webhook = await sendDataToSupabase('webhook', {
