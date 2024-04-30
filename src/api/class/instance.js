@@ -451,15 +451,7 @@ class WhatsAppInstance {
 
                             } else {
                                 const imgUrl = await sock.profilePictureUrl(remoteJid)
-                                const conversa = await sendDataToSupabase('conversas', {
-                                    numero_contato: wppUser,
-                                    foto_contato: imgUrl,
-                                    nome_contato: message.pushName,
-                                    ref_empresa: this.empresaId,
-                                    key_instancia: this.key,
-                                    id_api: idApi,
-                                    Status: 'Bot'
-                                })
+                                
                                 await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
                                 webhook = await sendDataToSupabase('webhook', {
                                     data: msg,
@@ -478,7 +470,16 @@ class WhatsAppInstance {
                                     id_contato_webhook: contactId,
                                     instance_key: this.key
                                 })
-                                await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
+                                const conversa = await sendDataToSupabase('conversas', {
+                                    numero_contato: wppUser,
+                                    foto_contato: imgUrl,
+                                    nome_contato: message.pushName,
+                                    ref_empresa: this.empresaId,
+                                    key_instancia: this.key,
+                                    id_api: idApi,
+                                    Status: 'Bot',
+                                    webhook_id_ultima: webhook.id
+                                })
                             }
                             //throw new Error('Mensagem não é minha!')
                         } else {
