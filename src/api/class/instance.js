@@ -415,7 +415,7 @@ class WhatsAppInstance {
                                             id_contato_webhook: contactId,
                                             instance_key: this.key
                                         })
-                                        await updateDataInTable('conversas_test', {id: conversa.id}, {webhook_id_ultima: webhook.id})
+                                        await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
                                     
                                     
                                 } else if(conversa.Status === 'Finalizado' || conversa.Status === 'Visualizar') {
@@ -438,7 +438,7 @@ class WhatsAppInstance {
                                             instance_key: this.key
                                         })
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
-                                    await sendDataToSupabase('conversas_test', {
+                                    await sendDataToSupabase('conversas', {
                                         numero_contato: wppUser,
                                         foto_contato: imgUrl,
                                         nome_contato: message.pushName,
@@ -470,7 +470,7 @@ class WhatsAppInstance {
                                     id_contato_webhook: contactId,
                                     instance_key: this.key
                                 })
-                                const conversa = await sendDataToSupabase('conversas_test', {
+                                const conversa = await sendDataToSupabase('conversas', {
                                     numero_contato: wppUser,
                                     foto_contato: imgUrl,
                                     nome_contato: message.pushName,
