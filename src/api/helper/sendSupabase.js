@@ -117,7 +117,7 @@ async function getSingleWebhook(data) {
 
 async function getSingleConversa(numero, empresaId) {
     try {
-        const {data, error} = await supabase.from('conversas').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at', {ascending: false}).limit(1)
+        const {data, error} = await supabase.from('conversas_test').select('*').eq('numero_contato', numero).eq('ref_empresa', empresaId).order('created_at', {ascending: false}).limit(1)
         if(error) {
             console.error('Deu erro no supabase erro: ', error)
             return null
@@ -163,7 +163,7 @@ async function updateDataInTable(tableName, matchCriteria, newData) {
 async function verifyConversaId(userNumber, key) {
     try {
         const { data, error } = await supabase
-            .from('conversas')
+            .from('conversas_test')
             .select('*')
             .eq('numero_contato', userNumber)
             .eq('key_instancia', key)
@@ -187,7 +187,7 @@ async function adicionaRegistro(userNumber, key, idApi, nome) {
 	//console.log(dadoExiste)
     if (dadoExiste.length == 0) {
         const { data, error } = await supabase
-            .from('conversas')
+            .from('conversas_test')
             .insert([{ nome_contato: nome, numero_contato: userNumber, key_instancia: key, id_api: idApi }]);
         
         //console.log('dadoExiste', dadoExiste);
