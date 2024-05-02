@@ -167,7 +167,7 @@ class WhatsAppInstance {
                     console.log('Antes dos update')
                     console.log({instanceConexaoId: this.instance.conexaoId, thisClientId: this.clientId, empresaId: this.empresaId})
                     if(this.instance.conexaoId){
-                        await updateDataInTable('conexoes', {id: this.instance.conexaoId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
+                        await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
                         await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
                         await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: ''})
                         await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': ''})
