@@ -165,6 +165,7 @@ class WhatsAppInstance {
                     })
                     this.instance.online = false
                     console.log('Antes dos update')
+                    console.log({instanceConexaoId: this.instance.conexaoId, thisClientId: this.clientId, empresaId: this.empresaId})
                     if(this.instance.conexaoId){
                         await updateDataInTable('conexoes', {id: this.instance.conexaoId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
                         await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
