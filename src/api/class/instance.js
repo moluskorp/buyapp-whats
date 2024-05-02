@@ -150,17 +150,21 @@ class WhatsAppInstance {
             }
 
             if (connection === 'close') {
+                console.log('Conexão fechada')
                 // reconnect if not logged out
                 if (
                     lastDisconnect?.error?.output?.statusCode !==
                     DisconnectReason.loggedOut
                 ) {
+                    console.log('Tentar reconectar')
                     await this.init()
                 } else {
+                    console.log('Derrubar conexao')
                     await this.collection.drop().then((r) => {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
+                    console.log('Antes dos update')
                     if(this.instance.conexaoId){
                         await updateDataInTable('conexoes', {id: this.instance.conexaoId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
                         await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
