@@ -646,7 +646,7 @@ class WhatsAppInstance {
         const {id, name} = user
         const phone = id.split('@')[0].split(':')[0]
         this.name = name
-        const conexao = await getConexao(phone, this.empresaId)
+        const conexao = await getConexao(phone, this.empresaId, this.clientId)
         if(conexao) {
             if(conexao.status_conexao !== 'desconectado'){
                 await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})    

@@ -56,9 +56,9 @@ async function fetchSetores(empresaId) {
     }
 }
 
-async function getConexao(numero, empresaId) {
+async function getConexao(numero, empresaId, conexaoId) {
     try {
-        const {data, error} = await supabase.from('conexoes').select('*').eq('Número', numero).eq('id_empresa', empresaId).order('created_at', {ascending: false}).limit(1)
+        const {data, error} = await supabase.from('conexoes').select('*').eq('Número', numero).eq('id_empresa', empresaId).neq('id', conexaoId).order('created_at', {ascending: false}).limit(1)
         if(error) {
             console.error('Deu erro no supabase erro: ', error)
             return null
