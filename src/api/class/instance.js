@@ -156,7 +156,7 @@ class WhatsAppInstance {
                     lastDisconnect?.error?.output?.statusCode !==
                     DisconnectReason.loggedOut
                 ) {
-                    console.log('Tentar reconectar')
+                    console.log('Tentar reconectar', this.clientId)
                     await this.init()
                 } else {
                     console.log('Derrubar conexao')
@@ -164,14 +164,12 @@ class WhatsAppInstance {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
-                    console.log('Antes dos update')
-                    console.log({instanceConexaoId: this.instance.conexaoId, thisClientId: this.clientId, empresaId: this.empresaId})
                     if(this.instance.conexaoId){
                         await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
-                        await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
-                        await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: ''})
-                        await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': ''})
-                        await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
+                        await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
+                        // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
+                        // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: ''})
+                        // await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
                     }
 
                 }
