@@ -145,9 +145,7 @@ class WhatsAppInstance {
             console.log({update})
             //  TESTE MEU
             if (connection === 'connecting'){
-                if(this.clientId){
-                    //await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'carregando'})
-                }
+                console.log('conectando')
             }
 
             if (connection === 'close') {
