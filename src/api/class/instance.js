@@ -149,7 +149,7 @@ class WhatsAppInstance {
             }
 
             if (connection === 'close') {
-                reconnect if not logged out
+                // reconnect if not logged out
                 if (
                     lastDisconnect?.error?.output?.statusCode !==
                     DisconnectReason.loggedOut
