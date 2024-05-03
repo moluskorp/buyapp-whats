@@ -142,7 +142,6 @@ class WhatsAppInstance {
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update
-            console.log({update})
             //  TESTE MEU
             if (connection === 'connecting'){
                 console.log('conectando')
@@ -155,7 +154,7 @@ class WhatsAppInstance {
                     DisconnectReason.loggedOut
                 ) {
                     console.log('Tentar reconectar', this.clientId)
-                    console.log('Status', lastDisconnect?.error?.output?.statusCode, this.clientId)
+                    console.log({update})
                     await this.init()
                 } else {
                     console.log('Derrubar conexao')
