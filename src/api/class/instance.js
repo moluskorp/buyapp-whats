@@ -149,35 +149,35 @@ class WhatsAppInstance {
             }
 
             if (connection === 'close') {
-                // reconnect if not logged out
-                // if (
-                //     lastDisconnect?.error?.output?.statusCode !==
-                //     DisconnectReason.loggedOut
-                // ) {
-                //     console.log('Tentar reconectar', this.clientId)
-                //     console.log('Status', lastDisconnect?.error?.output?.statusCode, this.clientId)
-                //     if (lastDisconnect?.error?.output?.statusCode === 405) {
-                //         console.log('405: ', this.clientId)
-                //     }else {
-                //         await this.init()
-                //     }
-                // } else {
-                //     console.log('Derrubar conexao')
-                //     await this.collection.drop().then((r) => {
-                //         logger.info('STATE: Droped collection')
-                //     })
-                //     this.instance.online = false
-                //     if(this.instance.conexaoId){
-                //         console.log('inicio update', this.clientId)
-                //         await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
-                //         await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
-                //         console.log('Final update', this.clientId)
-                //         // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
-                //         // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: ''})
-                //         // await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
-                //     }
+                reconnect if not logged out
+                if (
+                    lastDisconnect?.error?.output?.statusCode !==
+                    DisconnectReason.loggedOut
+                ) {
+                    console.log('Tentar reconectar', this.clientId)
+                    console.log('Status', lastDisconnect?.error?.output?.statusCode, this.clientId)
+                    if (lastDisconnect?.error?.output?.statusCode === 405) {
+                        console.log('405: ', this.clientId)
+                    }else {
+                        await this.init()
+                    }
+                } else {
+                    console.log('Derrubar conexao')
+                    await this.collection.drop().then((r) => {
+                        logger.info('STATE: Droped collection')
+                    })
+                    this.instance.online = false
+                    if(this.instance.conexaoId){
+                        console.log('inicio update', this.clientId)
+                        await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
+                        await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
+                        console.log('Final update', this.clientId)
+                        // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
+                        // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: ''})
+                        // await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
+                    }
 
-                // }
+                }
 
                 if (
                     [
@@ -255,8 +255,6 @@ class WhatsAppInstance {
                 })
             }
         })
-
-        sock?.ev.on('')
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
