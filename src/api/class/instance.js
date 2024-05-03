@@ -155,6 +155,9 @@ class WhatsAppInstance {
                 ) {
                     console.log('Tentar reconectar', this.clientId)
                     console.log({update})
+                    if(lastDisconnect.error) {
+                        console.log({error: lastDisconnect.error})
+                    }
                     await this.init()
                 } else {
                     console.log('Derrubar conexao')
