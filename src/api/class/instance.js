@@ -135,7 +135,6 @@ class WhatsAppInstance {
     }
 
     setHandler() {
-        console.log('inicio handler')
         const sock = this.instance.sock
         // on credentials update save state
         sock?.ev.on('creds.update', this.authState.saveCreds)
@@ -166,8 +165,10 @@ class WhatsAppInstance {
                     })
                     this.instance.online = false
                     if(this.instance.conexaoId){
+                        console.log('inicio update', this.clientId)
                         await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
                         await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
+                        console.log('Final update', this.clientId)
                         // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
                         // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: ''})
                         // await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
@@ -619,9 +620,6 @@ class WhatsAppInstance {
                     this.key
                 )
         })
-
-        console.log('Final handler', this.clientId)
-
 
     }
 
