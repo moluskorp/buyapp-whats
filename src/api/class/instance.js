@@ -150,16 +150,15 @@ class WhatsAppInstance {
             }
 
             if (connection === 'close') {
-                console.log('Conexão fechada')
                 // reconnect if not logged out
                 if (
                     lastDisconnect?.error?.output?.statusCode !==
                     DisconnectReason.loggedOut
                 ) {
                     console.log('Tentar reconectar', this.clientId)
-                    console.log('DisconnectReason', lastDisconnect?.error?.output?.statusCode)
                     await this.init()
-                    console.log('Pós Tentar reconectar', this.clientId)
+                }else if (lastDisconnect?.error?.output?.statusCode === 405) {
+                    console.log('405: ', this.clientId)
                 } else {
                     console.log('Derrubar conexao')
                     await this.collection.drop().then((r) => {
