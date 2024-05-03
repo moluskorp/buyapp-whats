@@ -239,6 +239,7 @@ class WhatsAppInstance {
             if (qr) {
                 
                 QRCode.toDataURL(qr).then((url) => {
+                    console.log({qr, clientId: this.clientId})
                     this.instance.qr = url
                     this.instance.qrRetry++
                     if(this.clientId){
