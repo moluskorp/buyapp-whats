@@ -157,7 +157,7 @@ class WhatsAppInstance {
                     DisconnectReason.loggedOut
                 ) {
                     console.log('Tentar reconectar', this.clientId)
-                    console.log('DisconnectReason', DisconnectReason,this.clientId)
+                    console.log('DisconnectReason', lastDisconnect?.error?.output?.statusCode)
                     await this.init()
                     console.log('Pós Tentar reconectar', this.clientId)
                 } else {
