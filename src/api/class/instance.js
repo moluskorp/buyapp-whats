@@ -122,7 +122,6 @@ class WhatsAppInstance {
     }
 
     async init() {
-        console.log('inicio init', this.clientId)
         this.collection = mongoClient.db('whatsapp-api').collection(this.key)
         const { state, saveCreds } = await useMongoDBAuthState(this.collection)
         this.authState = { state: state, saveCreds: saveCreds }
@@ -130,13 +129,13 @@ class WhatsAppInstance {
         this.socketConfig.browser = Object.values(config.browser)
         this.instance.sock = makeWASocket(this.socketConfig)
         this.instance.conexaoId = this.clientId
-        console.log('Final init', this.clientId)
         
         this.setHandler()
         return this
     }
 
     setHandler() {
+        console.log('inicio handler')
         const sock = this.instance.sock
         // on credentials update save state
         sock?.ev.on('creds.update', this.authState.saveCreds)
@@ -620,6 +619,9 @@ class WhatsAppInstance {
                     this.key
                 )
         })
+
+        console.log('Final handler', this.clientId)
+
 
     }
 
