@@ -142,6 +142,7 @@ class WhatsAppInstance {
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update
+            console.log({update})
             //  TESTE MEU
             if (connection === 'connecting'){
                 if(this.clientId){
@@ -256,6 +257,8 @@ class WhatsAppInstance {
                 })
             }
         })
+
+        sock?.ev.on('')
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
