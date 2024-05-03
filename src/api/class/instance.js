@@ -157,7 +157,20 @@ class WhatsAppInstance {
                     console.log('Tentar reconectar', this.clientId)
                     console.log('Status', lastDisconnect?.error?.output?.statusCode, this.clientId)
                     if (lastDisconnect.error) {
-                        console.log('erro: ', this.clientId)
+                        console.log('Derrubar conexao')
+                        await this.collection.drop().then((r) => {
+                            logger.info('STATE: Droped collection')
+                        })
+                        this.instance.online = false
+                        if(this.instance.conexaoId){
+                            console.log('inicio update', this.clientId)
+                            await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
+                            await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
+                            console.log('Final update', this.clientId)
+                            // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
+                            // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: ''})
+                            // await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
+                        }
                     }else {
                         await this.init()
                     }
