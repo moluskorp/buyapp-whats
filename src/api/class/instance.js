@@ -201,7 +201,7 @@ class WhatsAppInstance {
                         // await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
                     setTimeout(async () => {
                         this.updateIntanceInfo()
-                    }, 9000);
+                    }, 3000);
 
                 }
 
