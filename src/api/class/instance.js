@@ -299,10 +299,37 @@ class WhatsAppInstance {
 
                             let quotedId
                             let contactId
+                            let contatoId
+                            const imgUrl = await sock.profilePictureUrl(remoteJid)
+
 
                             if(message.message.extendedTextMessage && message.message.extendedTextMessage.contextInfo.quotedMessage){
                                 const webhook  = await getIdWebHookMessage(message.message.extendedTextMessage.contextInfo.stanzaId)
                                 quotedId = webhook.id
+                            }
+
+                            const contactSend = await getContato(wppUser, this.empresaId)
+                            if(!contactSend) {
+                                let numeroFormatado
+                                let numeroLocal = wppUser.substring(2)
+                                if(numeroLocal.length === 11) {
+                                    numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,7)}-${numeroLocal.substring(7)}`
+                                } else if(numeroLocal.length === 10) {
+                                    numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,6)}-${numeroLocal.substring(6)}`
+                                } else {
+                                    numeroFormatado = wppUser
+                                }
+                                const newContact = await sendDataToSupabase('contatos', {
+                                    nome: message.pushName,
+                                    numero: wppUser,
+                                    ref_empresa: this.empresaId,
+                                    status_conversa: 'Visualizar',
+                                    numero_relatorios: numeroFormatado,
+                                    foto_contato: imgUrl,
+                                })
+                                contatoId = newContact.id
+                            } else {
+                                contatoId = contactSend.id
                             }
 
                             if(message.message.contactMessage){
@@ -369,7 +396,7 @@ class WhatsAppInstance {
                                             id_contato_webhook: contactId,
                                             instance_key: this.key
                                         })
-                                        await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id})
+                                        await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id, ref_contatos: contatoId})
                                     
                                     
                                 } else if(conversa.Status === 'Visualizar') {
@@ -391,7 +418,6 @@ class WhatsAppInstance {
                                             id_contato_webhook: contactId,
                                             instance_key: this.key
                                         })
-                                    const imgUrl = await sock.profilePictureUrl(remoteJid)
                                     await sendDataToSupabase('conversas', {
                                         numero_contato: wppUser,
                                         foto_contato: imgUrl,
@@ -400,6 +426,7 @@ class WhatsAppInstance {
                                         webhook_id_ultima: webhook.id,
                                         key_instancia: this.key,
                                         id_api: idApi,
+                                        ref_contatos: contatoId
                                     })
                                 }else if (conversa.Status === 'Finalizado') {
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
@@ -430,7 +457,8 @@ class WhatsAppInstance {
                                     key_instancia: this.key,
                                     id_api: idApi,
                                     Status: 'Bot',
-                                    webhook_id_ultima: webhook.id
+                                    webhook_id_ultima: webhook.id,
+                                    ref_contatos: contatoId
                                 })
                                 }
 
@@ -463,7 +491,8 @@ class WhatsAppInstance {
                                     key_instancia: this.key,
                                     id_api: idApi,
                                     Status: 'Bot',
-                                    webhook_id_ultima: webhook.id
+                                    webhook_id_ultima: webhook.id,
+                                    ref_contatos: contatoId
                                 })
                             }
                             //throw new Error('Mensagem não é minha!')
