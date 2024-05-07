@@ -639,7 +639,7 @@ class WhatsAppInstance {
                 await this.instance.sock?.logout()
                 return
             } else {
-                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'pronto', qrcode: ''})
+                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'pronto', qrcode: '', Status: true, instance_key: this.key})
                 await deleteDataFromtable('conexões', {id: conexao.id})
                 //await updateDataInTable('conexoes', {id: conexao.id}, {status_conexao: 'Duplicado', qrcode: '', Status: false}) 
                 const setores = await fetchSetores(this.empresaId)
