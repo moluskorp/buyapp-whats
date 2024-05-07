@@ -637,7 +637,6 @@ class WhatsAppInstance {
                 await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})
                 this.duplicado = true
                 await this.instance.sock?.logout()
-                this.deleteInstance()    
                 return
             } else {
                 const setores = await fetchSetores(this.empresaId)
