@@ -645,7 +645,7 @@ class WhatsAppInstance {
                 for(const setor of setores) {
                     await sendDataToSupabase('setor_conexao', {
                         id_setor: setor.id,
-                        id_conexao: this.clientId,
+                        id_conexao: conexao.id,
                         id_empresa: this.empresaId,
                         keyConexao: this.key
                     })
