@@ -633,19 +633,19 @@ class WhatsAppInstance {
         this.name = name
         const conexao = await getConexao(phone, this.empresaId, this.clientId)
         if(conexao) {
-            if(conexao["Status"] !== false){
+            if(conexao["Status"] === true){
                 await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})
                 this.duplicado = true
                 await this.instance.sock?.logout()
                 return
             } else {
-                await updateDataInTable('conexoes', {id: conexao.id}, {Nome: name, 'Número': phone, status_conexao: 'pronto', qrcode: ''})
-                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'Duplicado', qrcode: '', Status: false}) 
+                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'pronto', qrcode: ''})
+                await updateDataInTable('conexoes', {id: conexao.id}, {status_conexao: 'Duplicado', qrcode: '', Status: false}) 
                 const setores = await fetchSetores(this.empresaId)
                 for(const setor of setores) {
                     await sendDataToSupabase('setor_conexao', {
                         id_setor: setor.id,
-                        id_conexao: conexao.id,
+                        id_conexao: this.clientId,
                         id_empresa: this.empresaId,
                         keyConexao: this.key
                     })
