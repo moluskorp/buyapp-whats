@@ -170,6 +170,7 @@ class WhatsAppInstance {
                         await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
                         await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
                         console.log('Final update', this.clientId)
+                        await this.instance.sock?.logout()
                         // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
                         // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: ''})
                         // await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
