@@ -17,7 +17,7 @@ async function sendDataToSupabase(tableName, data) {
 	try {  
         const response = await supabase.from(tableName).insert([data]).select()
         if(response.error) {
-            console.error('Error inserting data:', response.error);
+            console.error('Error inserting data:', response.error, {tableName, data});
             return null
         } else {
             return response.data[0]
