@@ -325,7 +325,7 @@ class WhatsAppInstance {
                                     ref_empresa: this.empresaId,
                                     status_conversa: 'Visualizar',
                                     numero_relatorios: numeroFormatado,
-                                    foto_contato: imgUrl,
+                                    foto: imgUrl,
                                 })
                                 contatoId = newContact.id
                             } else {
