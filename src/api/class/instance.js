@@ -438,7 +438,7 @@ class WhatsAppInstance {
                                             'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
                                             file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
                                             'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
-                                            'id_api_conversa' : conversa.id_api,
+                                            'id_api_conversa' : idApi,
                                             video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
                                             idMensagem: msg.key.id,
                                             replyWebhook: quotedId,
@@ -453,7 +453,7 @@ class WhatsAppInstance {
                                         ref_empresa: this.empresaId,
                                         webhook_id_ultima: webhook.id,
                                         key_instancia: this.key,
-                                        id_api: conversa.id_api,
+                                        id_api: idApi,
                                     })
                                 }else if (conversa.Status === 'Finalizado') {
                                     const imgUrl = await sock.profilePictureUrl(remoteJid)
@@ -687,8 +687,9 @@ class WhatsAppInstance {
         this.name = name
         const conexao = await getConexao(phone, this.empresaId, this.clientId)
         if(conexao) {
-            if(conexao.status_conexao !== 'desconectado'){
-                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})    
+            if(conexao["Status"] !== false){
+                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})
+                await this.instance.sock?.logout()    
                 return
             } else {
                 const setores = await fetchSetores(this.empresaId)
