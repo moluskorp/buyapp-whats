@@ -639,6 +639,8 @@ class WhatsAppInstance {
                 await this.instance.sock?.logout()
                 return
             } else {
+                await updateDataInTable('conexoes', {id: conexao.id}, {Nome: name, 'Número': phone, status_conexao: 'pronto', qrcode: ''})
+                await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'Duplicado', qrcode: '', Status: false}) 
                 const setores = await fetchSetores(this.empresaId)
                 for(const setor of setores) {
                     await sendDataToSupabase('setor_conexao', {
