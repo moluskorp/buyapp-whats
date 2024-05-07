@@ -41,6 +41,7 @@ class WhatsAppInstance {
     webhook = undefined
     clientId = null
     empresaId = null
+    duplicado = false
 
     instance = {
         conexaoId: '',
@@ -142,68 +143,28 @@ class WhatsAppInstance {
         // on socket closed, opened, connecting
         sock?.ev.on('connection.update', async (update) => {
             const { connection, lastDisconnect, qr } = update
-            //  TESTE MEU
-            if (connection === 'connecting'){
-                console.log('conectando')
-            }
-
             if (connection === 'close') {
                 // reconnect if not logged out
                 if (
                     lastDisconnect?.error?.output?.statusCode !==
                     DisconnectReason.loggedOut
                 ) {
-                    console.log('Tentar reconectar', this.clientId)
-                    console.log({update})
-                    if(lastDisconnect.error) {
-                        console.log({error: lastDisconnect.error})
-                    }
                     await this.init()
                 } else {
-                    console.log('Derrubar conexao')
                     await this.collection.drop().then((r) => {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
-                    if(this.instance.conexaoId){
-                        console.log('inicio update', this.clientId)
+                    if(this.instance.conexaoId && !this.duplicado){
                         await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
                         await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
-                        console.log('Final update', this.clientId)
-                        await this.instance.sock?.logout()
-                        // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
-                        // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: ''})
-                        // await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
                     }
-
                 }
-
-                if (
-                    [
-                        'all',
-                        'connection',
-                        'connection.update',
-                        'connection:close',
-                    ].some((e) => config.webhookAllowedEvents.includes(e))
-                )
-                    await this.SendWebhook(
-                        'connection',
-                        {
-                            connection: connection,
-                        },
-                        this.key
-                    )
             } else if (connection === 'open') {
                 if(this.instance.conexaoId){
-                    
-                    // await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: this.key})
-                        // await updateDataInTable('Setores', {id_empresas: this.empresaId}, {key_conexao: this.key})
-                        // await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': this.key})
-                        // await updateDataInTable('Empresa', {id: this.empresaId}, {key: this.key})
                     setTimeout(async () => {
                         this.updateIntanceInfo()
                     }, 3000);
-
                 }
 
                 if (config.mongoose.enabled) {
@@ -217,21 +178,6 @@ class WhatsAppInstance {
                     }
                 }
                 this.instance.online = true
-                if (
-                    [
-                        'all',
-                        'connection',
-                        'connection.update',
-                        'connection:open',
-                    ].some((e) => config.webhookAllowedEvents.includes(e))
-                )
-                    await this.SendWebhook(
-                        'connection',
-                        {
-                            connection: connection,
-                        },
-                        this.key
-                    )
             }
 
             if (qr) {
@@ -689,7 +635,9 @@ class WhatsAppInstance {
         if(conexao) {
             if(conexao["Status"] !== false){
                 await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})
-                await this.instance.sock?.logout()    
+                this.duplicado = true
+                await this.instance.sock?.logout()
+                this.deleteInstance()    
                 return
             } else {
                 const setores = await fetchSetores(this.empresaId)
