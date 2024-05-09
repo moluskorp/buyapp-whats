@@ -9,7 +9,7 @@ const initDBStats = require('./api/db/db')
 
 const { Session } = require('./api/class/session')
 const connectToCluster = require('./api/helper/connectMongoClient')
-const { getConversasWhereBot, getSingleBot } = require('./api/helper/sendSupabase')
+const { getConversasWhereBot, getSingleBot, getSingleSetor, updateDataInTable } = require('./api/helper/sendSupabase')
 
 if (config.mongoose.enabled) {
     mongoose.set('strictQuery', true);
@@ -45,7 +45,6 @@ setInterval( async () => {
     const conversas = await getConversasWhereBot()
     if(conversas) {
         for (const conversa of conversas) {
-            console.log({conversa})
             const {horario_ultima_mensagem} = conversa
             const horarioUltimaMensagem = new Date(horario_ultima_mensagem)
             const horarioAtual = new Date()
@@ -56,7 +55,13 @@ setInterval( async () => {
             const horarioMaisTempoTransferencia = new Date(horarioUltimaMensagem.getTime() + tempoTransferenciaMs)
 
             if(horarioAtual >= horarioMaisTempoTransferencia) {
-                console.log('Deu o tempo do: ', conversa.nome_contato)
+                const instance = WhatsAppInstances[conversa.key_instancia]
+                const setor = getSingleSetor(bot.setor_inatividade)
+                await updateDataInTable('conversas', {id: conversa.id}, {Status: "Espera", id_setor: setor.id})
+                await instance.sendTextMessage(
+                    conversa.numero_contato,
+                    `Atendimento transferido para o setor ${setor.Nome} por inatividade do usuário`
+                )
             }
         }
     }
