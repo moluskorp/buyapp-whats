@@ -53,7 +53,7 @@ setInterval( async () => {
             const {tempo_transferencia} = bot
             const tempoTransferenciaMs = tempo_transferencia * 60 * 1000
 
-            const horarioMaisTempoTransferencia = new Date(horario_ultima_mensagem.getTime() + tempoTransferenciaMs)
+            const horarioMaisTempoTransferencia = new Date(horarioUltimaMensagem.getTime() + tempoTransferenciaMs)
 
             if(horarioAtual >= horarioMaisTempoTransferencia) {
                 console.log('Deu o tempo do: ', conversa.nome_contato)
