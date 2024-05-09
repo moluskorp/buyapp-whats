@@ -9,6 +9,7 @@ const initDBStats = require('./api/db/db')
 
 const { Session } = require('./api/class/session')
 const connectToCluster = require('./api/helper/connectMongoClient')
+const { getConversasWhereBot, getSingleBot } = require('./api/helper/sendSupabase')
 
 if (config.mongoose.enabled) {
     mongoose.set('strictQuery', true);
@@ -38,6 +39,28 @@ const exitHandler = () => {
         process.exit(1)
     }
 }
+
+setInterval( async () => {
+    console.log('Rodando Interval')
+    const conversas = await getConversasWhereBot()
+    if(conversas) {
+        for (const conversa of conversas) {
+            console.log({conversa})
+            const {horario_ultima_mensagem} = conversa
+            const horarioUltimaMensagem = new Date(horario_ultima_mensagem)
+            const horarioAtual = new Date()
+            const bot = await getSingleBot(conversa.ref_empresa)
+            const {tempo_transferencia} = bot
+            const tempoTransferenciaMs = tempo_transferencia * 60 * 1000
+
+            const horarioMaisTempoTransferencia = new Date(horario_ultima_mensagem.getTime() + tempoTransferenciaMs)
+
+            if(horarioAtual >= horarioMaisTempoTransferencia) {
+                console.log('Deu o tempo do: ', conversa.nome_contato)
+            }
+        }
+    }
+}, 1000 * 60)
 
 const unexpectedErrorHandler = (error) => {
     logger.error(error)

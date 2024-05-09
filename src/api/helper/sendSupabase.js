@@ -130,6 +130,36 @@ async function getSingleConversa(numero, empresaId) {
     }
 }
 
+async function getSingleBot(empresaId) {
+    try {
+        const {data, error} = await supabase.from('Bot').select('*').eq('id_empresa', empresaId).order('created_at', {ascending: false}).limit(1)
+        if(error) {
+            console.error('Deu erro no supabase erro: ', error)
+            return null
+        } else {
+            return data.length > 0 ? data[0] : null
+        }
+    } catch(error) {
+        console.error('Ocorreu um erro inesperado', error)
+        return null
+    }
+}
+
+async function getConversasWhereBot() {
+    try {
+        const {data, error} = await supabase.from('conversas').select('*').eq('Status', 'Bot').order('created_at', {ascending: false}).limit(1)
+        if(error) {
+            console.error('Deu erro no supabase erro: ', error)
+            return null
+        } else {
+            return data.length > 0 ? data : null
+        }
+    } catch(error) {
+        console.error('Ocorreu um erro inesperado', error)
+        return null
+    }
+}
+
 async function getContato(numero, empresaId) {
     try {
         const {data, error} = await supabase.from('contatos').select('*').eq('numero', numero).eq('ref_empresa', empresaId).limit(1)
@@ -249,6 +279,8 @@ module.exports = {
     getIdWebHookMessage,
     getContato,
     fetchSetores,
-    getConexao
+    getConexao,
+    getConversasWhereBot, 
+    getSingleBot,
 };
 
