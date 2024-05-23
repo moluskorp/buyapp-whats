@@ -11,6 +11,7 @@ const storage = multer.memoryStorage()
 const upload = multer({ storage: storage, inMemory: true }).single('file')
 
 router.route('/text').post(keyVerify, loginVerify, trackStats, controller.Text)
+router.route('/group').post(keyVerify, loginVerify,  controller.Group)
 router.route('/image').post(keyVerify, loginVerify, upload, trackStats, controller.Image)
 router.route('/video').post(keyVerify, loginVerify, upload, trackStats, controller.Video)
 router.route('/audio').post(keyVerify, loginVerify, upload, trackStats, controller.Audio)

@@ -9,6 +9,17 @@ exports.Text = async (req, res) => {
     } })
 }
 
+exports.Group = async (req, res) => {
+    const data = await WhatsAppInstances[req.query.key].sendMessageGroup(
+        req.body.group,
+        req.body.message
+    )
+    return res.status(201).json({ error: false, data: {
+        key: data.key,
+        message: data
+    } })
+}
+
 exports.DeleteMesage = async (req, res) => {
     const data = await WhatsAppInstances[req.query.key].deleteMessage(
         req.body.id,

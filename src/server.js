@@ -40,33 +40,6 @@ const exitHandler = () => {
     }
 }
 
-setInterval( async () => {
-    console.log('Rodando Interval')
-    const conversas = await getConversasWhereBot()
-    if(conversas) {
-        for (const conversa of conversas) {
-            const {horario_ultima_mensagem} = conversa
-            const horarioUltimaMensagem = new Date(horario_ultima_mensagem)
-            const horarioAtual = new Date()
-            const bot = await getSingleBot(conversa.ref_empresa)
-            const {tempo_transferencia} = bot
-            const tempoTransferenciaMs = tempo_transferencia * 60 * 1000
-
-            const horarioMaisTempoTransferencia = new Date(horarioUltimaMensagem.getTime() + tempoTransferenciaMs)
-
-            if(horarioAtual >= horarioMaisTempoTransferencia) {
-                const instance = WhatsAppInstances[conversa.key_instancia]
-                const setor = getSingleSetor(bot.setor_inatividade)
-                await updateDataInTable('conversas', {id: conversa.id}, {Status: "Espera", id_setor: setor.id})
-                await instance.sendTextMessage(
-                    conversa.numero_contato,
-                    `Atendimento transferido para o setor ${setor.Nome} por inatividade do usuário`
-                )
-            }
-        }
-    }
-}, 1000 * 60)
-
 const unexpectedErrorHandler = (error) => {
     logger.error(error)
     exitHandler()

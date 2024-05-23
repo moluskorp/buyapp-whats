@@ -1,18 +1,14 @@
 const { WhatsAppInstance } = require('../class/instance')
 const config = require('../../config/config')
 const { Session } = require('../class/session')
-const { jidEncode, getChatId, jidDecode } = require('@whiskeysockets/baileys')
+const { jidDecode } = require('@whiskeysockets/baileys')
+const { WebSocket } = require('ws')
 
 exports.init = async (req, res) => {
     const key = req.query.key
-    const clientId = req.query.id
-    const empresaId = req.query.empresaId
-
-    const webhook = !req.query.webhook ? false : req.query.webhook
-    const webhookUrl = !req.query.webhookUrl ? null : req.query.webhookUrl
 
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
-    const instance = new WhatsAppInstance(key, webhook, webhookUrl, clientId, empresaId)
+    const instance = new WhatsAppInstance(key)
     const data = await instance.init()
     WhatsAppInstances[data.key] = instance
     const qr = await WhatsAppInstances[req.query.key]?.instance.qr
@@ -20,15 +16,24 @@ exports.init = async (req, res) => {
         error: false,
         message: 'Initializing successfully',
         key: data.key,
-        webhook: {
-            enabled: webhook,
-            webhookUrl: webhookUrl,
-        },
         qrcode: {
             url: appUrl + '/instance/qr?key=' + data.key,
         },
         qr,
         browser: config.browser,
+    })
+}
+
+exports.socket = async (req, res) => {
+    const key = req.query.key
+    const instance = new WhatsAppInstance(key)
+    const data = await instance.init()
+    WhatsAppInstances[data.key] = instance
+    const qr = await instance.instance.qr
+    const wsServer = new WebSocket.Server({noServer: true})
+
+    wsServer.on('connection', async (ws) => {
+        console.log('WebSocket connected! ')
     })
 }
 

@@ -28,6 +28,7 @@ const {sendDataToSupabase, adicionaRegistro, uploadSUp, fetchAllDataFromTable, d
 
 class WhatsAppInstance {
     socketConfig = {
+        version: [2, 2413, 1],
         defaultQueryTimeoutMs: undefined,
         printQRInTerminal: false,
         logger: pino({
@@ -57,35 +58,8 @@ class WhatsAppInstance {
         baseURL: config.webhookUrl,
     })
 
-    constructor(key, allowWebhook, webhook, clientId, empresaId) {
+    constructor(key) {
         this.key = key ? key : uuidv4()
-        this.instance.customWebhook = this.webhook ? this.webhook : webhook
-        this.empresaId = empresaId
-        this.allowWebhook = config.webhookEnabled
-            ? config.webhookEnabled
-            : allowWebhook
-        if (this.allowWebhook && this.instance.customWebhook !== null) {
-            this.allowWebhook = true
-            this.instance.customWebhook = webhook
-            this.axiosInstance = axios.create({
-                baseURL: webhook,
-            })
-        }
-        if(clientId){
-            this.clientId = clientId
-        } else {
-            getIdConexoes('conexoes', this.key).then((result) => {
-                if(result){
-                    this.clientId = result.id
-                    this.empresaId = result.id_empresa
-                    this.name = result.Nome
-                } else {
-                    delete WhatsAppInstances[this.key]
-                }
-            })
-        }
-        
-        
     }
     async downloadMessageSup(sock, msg, extension, id) {
         // download the message
@@ -155,18 +129,8 @@ class WhatsAppInstance {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
-                    if(this.instance.conexaoId && !this.duplicado){
-                        await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', qrcode: '', Status: false})
-                        await deleteDataFromtable('setor_conexao', {id_conexao: this.clientId})
-                    }
                 }
             } else if (connection === 'open') {
-                if(this.instance.conexaoId){
-                    setTimeout(async () => {
-                        this.updateIntanceInfo()
-                    }, 3000);
-                }
-
                 if (config.mongoose.enabled) {
                     let alreadyThere = await Chat.findOne({
                         key: this.key,
@@ -174,7 +138,6 @@ class WhatsAppInstance {
                     if (!alreadyThere) {
                         const saveChat = new Chat({ key: this.key })
                         await saveChat.save()
-                        
                     }
                 }
                 this.instance.online = true
@@ -183,33 +146,14 @@ class WhatsAppInstance {
             if (qr) {
                 
                 QRCode.toDataURL(qr).then((url) => {
-                    console.log({qr, clientId: this.clientId})
                     this.instance.qr = url
                     this.instance.qrRetry++
-                    if(this.clientId){
-                        updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'qrCode', qrcode: url})
-                    }
-                    // if (this.instance.qrRetry >= config.instance.maxRetryQr) {
-                    //     // close WebSocket connection
-                    //     this.instance.sock.ws.close()
-                    //     // remove all events
-                    //     this.instance.sock.ev.removeAllListeners()
-                    //     this.instance.qr = ' '
-                    //     logger.info('socket connection terminated')
-                    // }
                 })
             }
         })
 
         // sending presence
         sock?.ev.on('presence.update', async (json) => {
-
-            if (
-                ['all', 'presence', 'presence.update'].some((e) =>
-                    config.webhookAllowedEvents.includes(e)
-                )
-            )
-                await this.SendWebhook('presence', json, this.key)
         })
 
         // on receive all chats
@@ -268,251 +212,11 @@ class WhatsAppInstance {
             if (m.type === 'prepend'){
                 //Sei la
             }
-
-            
-
-
             this.instance.messages.unshift(...m.messages)
             if (m.type !== 'notify') return
             for(const message of m.messages) {
                 try{
-                    const {remoteJid} = message.key
-                    const isGroup = remoteJid.endsWith('@g.us')
-                    const isStatus = remoteJid.indexOf('status@') >= 0
-                    const messageType = Object.keys(message.message)[0]
-                    if(!isGroup && !isStatus) {
-                        if(!message.key.fromMe) {
-                            
-                            
-                            let wppUser = remoteJid.split('@')[0]
-                            if(wppUser.includes('-')) {
-                                wppUser = wppUser.split('-')[0]
-                            }
-                            const idApi = uuidv4()
-                            const conversa = await getSingleConversa(wppUser, this.empresaId)
-                            let msg = message
-
-                            let fileName;
-                            let fileUrl;
-                            let bucketUrl = "https://fntyzzstyetnbvrpqfre.supabase.co/storage/v1/object/public/chat/arquivos"
-                            let webhook
-
-                            let quotedId
-                            let contactId
-                            let contatoId
-                            const imgUrl = await sock.profilePictureUrl(remoteJid)
-
-
-                            if(message.message.extendedTextMessage && message.message.extendedTextMessage.contextInfo.quotedMessage){
-                                const webhook  = await getIdWebHookMessage(message.message.extendedTextMessage.contextInfo.stanzaId)
-                                quotedId = webhook.id
-                            }
-
-                            const contactSend = await getContato(wppUser, this.empresaId)
-                            if(!contactSend) {
-                                let numeroFormatado
-                                let numeroLocal = wppUser.substring(2)
-                                if(numeroLocal.length === 11) {
-                                    numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,7)}-${numeroLocal.substring(7)}`
-                                } else if(numeroLocal.length === 10) {
-                                    numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,6)}-${numeroLocal.substring(6)}`
-                                } else {
-                                    numeroFormatado = wppUser
-                                }
-                                const newContact = await sendDataToSupabase('contatos', {
-                                    nome: message.pushName,
-                                    numero: wppUser,
-                                    ref_empresa: this.empresaId,
-                                    status_conversa: 'Visualizar',
-                                    numero_relatorios: numeroFormatado,
-                                    foto: imgUrl,
-                                })
-                                contatoId = newContact.id
-                            } else {
-                                contatoId = contactSend.id
-                            }
-
-                            if(message.message.contactMessage){
-                                const waidRegex = /waid=(\d+):/
-                                const contact = message.message.contactMessage
-                                const displayName = contact.displayName
-                                const match = contact.vcard.match(waidRegex)
-
-                                if(match) {
-                                    const number = match[1]
-                                    const contact = await getContato(number, this.empresaId)
-                                    if(!contact) {
-                                        let numeroFormatado
-                                        let numeroLocal = number.substring(2)
-                                        if(numeroLocal.length === 11) {
-                                            numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,7)}-${numeroLocal.substring(7)}`
-                                        } else if(numeroLocal.length === 10) {
-                                            numeroFormatado = `(${numeroLocal.substring(0,2)}) ${numeroLocal.substring(2,6)}-${numeroLocal.substring(6)}`
-                                        } else {
-                                            numeroFormatado = number
-                                        }
-                                        const newContact = await sendDataToSupabase('contatos', {
-                                            nome: displayName,
-                                            numero: number,
-                                            ref_empresa: this.empresaId,
-                                            status_conversa: 'Visualizar',
-                                            numero_relatorios: numeroFormatado
-                                        })
-                                        contactId = newContact.id
-                                    } else {
-                                        contactId = contact.id
-                                    }
-                                }
-                            }
-
-
-                            if(message.message.protocolMessage){
-                                const { protocolMessage } = message.message
-                                const webhook = await getIdWebHookMessage(protocolMessage.key.id)
-                                await updateDataInTable('webhook', {id: webhook.id}, {deletada: true})
-                                return
-                            }
-
-                            console.log({conversa})
-
-                            if(conversa) {
-                                console.log({status: conversa.Status})
-                                if(conversa.Status === 'Espera' || conversa.Status === 'Em Atendimento' || conversa.Status === 'Bot') {
-                                    await this.workWithMessageType(messageType, sock, msg, conversa.id_api, fileUrl, bucketUrl)
-                                        webhook = await sendDataToSupabase('webhook', {
-                                            data: msg,
-                                            contatos: msg.key.remoteJid.split('@')[0],
-                                            fromMe: false,
-                                            mensagem: msg.message.conversation ? msg.message.conversation : null,
-                                            'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
-                                            imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
-                                            'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
-                                            file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
-                                            'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
-                                            'id_api_conversa' : conversa.id_api,
-                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
-                                            idMensagem: msg.key.id,
-                                            replyWebhook: quotedId,
-                                            id_contato_webhook: contactId,
-                                            instance_key: this.key
-                                        })
-                                        await updateDataInTable('conversas', {id: conversa.id}, {webhook_id_ultima: webhook.id, ref_contatos: contatoId})
-                                    
-                                    
-                                } else if(conversa.Status === 'Visualizar') {
-                                    await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
-                                        webhook = await sendDataToSupabase('webhook', {
-                                            data: msg,
-                                            contatos: msg.key.remoteJid.split('@')[0],
-                                            fromMe: false,
-                                            mensagem: msg.message.conversation ? msg.message.conversation : null,
-                                            'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
-                                            imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
-                                            'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
-                                            file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
-                                            'legenda file': msg.message.documentWithCaptionMessage ? msg.message.documentWithCaptionMessage.message.caption : null,
-                                            'id_api_conversa' : idApi,
-                                            video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
-                                            idMensagem: msg.key.id,
-                                            replyWebhook: quotedId,
-                                            id_contato_webhook: contactId,
-                                            instance_key: this.key
-                                        })
-                                    await sendDataToSupabase('conversas', {
-                                        numero_contato: wppUser,
-                                        foto_contato: imgUrl,
-                                        nome_contato: message.pushName,
-                                        ref_empresa: this.empresaId,
-                                        webhook_id_ultima: webhook.id,
-                                        key_instancia: this.key,
-                                        id_api: idApi,
-                                        ref_contatos: contatoId
-                                    })
-                                }else if (conversa.Status === 'Finalizado') {
-                                    const imgUrl = await sock.profilePictureUrl(remoteJid)
-                                
-                                await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
-                                webhook = await sendDataToSupabase('webhook', {
-                                    data: msg,
-                                    contatos: msg.key.remoteJid.split('@')[0],
-                                    fromMe: false,
-                                    mensagem: msg.message.conversation ? msg.message.conversation : null,
-                                    'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
-                                    imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
-                                    'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
-                                    file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
-                                    'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
-                                    'id_api_conversa' : idApi,
-                                    video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
-                                    idMensagem: msg.key.id,
-                                    replyWebhook: quotedId,
-                                    id_contato_webhook: contactId,
-                                    instance_key: this.key
-                                })
-                                const conversa = await sendDataToSupabase('conversas', {
-                                    numero_contato: wppUser,
-                                    foto_contato: imgUrl,
-                                    nome_contato: message.pushName,
-                                    ref_empresa: this.empresaId,
-                                    key_instancia: this.key,
-                                    id_api: idApi,
-                                    Status: 'Bot',
-                                    webhook_id_ultima: webhook.id,
-                                    ref_contatos: contatoId
-                                })
-                                }
-
-                            } else {
-                                const imgUrl = await sock.profilePictureUrl(remoteJid)
-                                
-                                await this.workWithMessageType(messageType, sock, msg, idApi, fileUrl, bucketUrl)
-                                webhook = await sendDataToSupabase('webhook', {
-                                    data: msg,
-                                    contatos: msg.key.remoteJid.split('@')[0],
-                                    fromMe: false,
-                                    mensagem: msg.message.conversation ? msg.message.conversation : null,
-                                    'áudio': msg.message.audioMessage ? msg.message.audioMessage.url : null,
-                                    imagem: msg.message.imageMessage? msg.message.imageMessage.url : null,
-                                    'legenda imagem': msg.message.imageMessage ? msg.message.imageMessage.caption : null,
-                                    file: msg.message.documentMessage ? msg.message.documentMessage.url : null,
-                                    'legenda file': msg.message.documentMessage ? msg.message.documentMessage.caption : null,
-                                    'id_api_conversa' : idApi,
-                                    video: msg.message.videoMessage ? msg.message.videoMessage.url : null,
-                                    idMensagem: msg.key.id,
-                                    replyWebhook: quotedId,
-                                    id_contato_webhook: contactId,
-                                    instance_key: this.key
-                                })
-                                const conversa = await sendDataToSupabase('conversas', {
-                                    numero_contato: wppUser,
-                                    foto_contato: imgUrl,
-                                    nome_contato: message.pushName,
-                                    ref_empresa: this.empresaId,
-                                    key_instancia: this.key,
-                                    id_api: idApi,
-                                    Status: 'Bot',
-                                    webhook_id_ultima: webhook.id,
-                                    ref_contatos: contatoId
-                                })
-                            }
-                            //throw new Error('Mensagem não é minha!')
-                        } else {
-                            if(!this.name) {
-                                this.name = message.pushName
-                                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: this.name})
-                            }
-                        }
-                    }
-                    if (config.markMessagesRead) {
-                        const unreadMessages = m.messages.map((msg) => {
-                            return {
-                                remoteJid: msg.key.remoteJid,
-                                id: msg.key.id,
-                                participant: msg.key?.participant,
-                            }
-                        })
-                        await sock.readMessages(unreadMessages)
-                    }
+                    // oie
                 }catch(err){
                     // process.exit()
                 }
@@ -521,62 +225,10 @@ class WhatsAppInstance {
         })
 
         sock?.ev.on('messages.update', async (messages) => {
-            //console.log('messages.update')
-            //console.dir(messages);
         })
-        // sock?.ws.on('CB:call', async (data) => {
-
-        //     if (data.content) {
-        //         if (data.content.find((e) => e.tag === 'offer')) {
-        //             const content = data.content.find((e) => e.tag === 'offer')
-        //             if (
-        //                 ['all', 'call', 'CB:call', 'call:offer'].some((e) =>
-        //                     config.webhookAllowedEvents.includes(e)
-        //                 )
-        //             )
-        //                 await this.SendWebhook(
-        //                     'call_offer',
-        //                     {
-        //                         id: content.attrs['call-id'],
-        //                         timestamp: parseInt(data.attrs.t),
-        //                         user: {
-        //                             id: data.attrs.from,
-        //                             platform: data.attrs.platform,
-        //                             platform_version: data.attrs.version,
-        //                         },
-        //                     },
-        //                     this.key
-        //                 )
-        //         } else if (data.content.find((e) => e.tag === 'terminate')) {
-        //             const content = data.content.find(
-        //                 (e) => e.tag === 'terminate'
-        //             )
-
-        //             if (
-        //                 ['all', 'call', 'call:terminate'].some((e) =>
-        //                     config.webhookAllowedEvents.includes(e)
-        //                 )
-        //             )
-        //                 await this.SendWebhook(
-        //                     'call_terminate',
-        //                     {
-        //                         id: content.attrs['call-id'],
-        //                         user: {
-        //                             id: data.attrs.from,
-        //                         },
-        //                         timestamp: parseInt(data.attrs.t),
-        //                         reason: data.content[0].attrs.reason,
-        //                     },
-        //                     this.key
-        //                 )
-        //         }
-        //     }
-        // })
+  
 
         sock?.ev.on('groups.upsert', async (newChat) => {
-            // console.log('groups.upsert ❌❌❌❌❌❌')
-            //console.log(newChat)
-
             this.createGroupByApp(newChat)
             if (
                 ['all', 'groups', 'groups.upsert'].some((e) =>
@@ -610,8 +262,6 @@ class WhatsAppInstance {
         })
 
         sock?.ev.on('group-participants.update', async (newChat) => {
-            //console.log('group-participants.update')
-            //console.log(newChat)
             this.updateGroupParticipantsByApp(newChat)
             if (
                 [
@@ -634,11 +284,6 @@ class WhatsAppInstance {
 
     async deleteInstance(key) {
         try {
-            await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'desconectado', Status: false, instance_key: '', qrcode: ''})
-            await updateDataInTable('colab_user', {id_empresa: this.empresaId}, {key_colabuser: ''})
-            await updateDataInTable('Setores', {id_empresa: this.empresaId}, {key_conexao: ''})
-            await updateDataInTable('Bot', {id_empresa: this.empresaId}, {'key_conexão': ''})
-            await updateDataInTable('Empresa', {id: this.empresaId}, {key: ''})
             await Chat.findOneAndDelete({ key: key })
 
         } catch (e) {
@@ -653,47 +298,6 @@ class WhatsAppInstance {
             webhookUrl: this.instance.customWebhook,
             user: this.instance?.online ? this.instance.sock?.user : {},
         }
-    }
-
-    async updateIntanceInfo() {
-        const {user} = await this.getInstanceDetail(this.key)
-        const {id, name} = user
-        const phone = id.split('@')[0].split(':')[0]
-        this.name = name
-        const conexao = await getConexao(phone, this.empresaId, this.clientId)
-        if(conexao) {
-            if(conexao["Status"] === true){
-                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'Duplicado', qrcode: ''})
-                this.duplicado = true
-                await this.instance.sock?.logout()
-                return
-            } else {
-                await updateDataInTable('conexoes', {id: this.clientId}, {Nome: name, 'Número': phone, status_conexao: 'pronto', qrcode: '', Status: true, instance_key: this.key})
-                await deleteDataFromtable('conexoes', {id: conexao.id})
-                //await updateDataInTable('conexoes', {id: conexao.id}, {status_conexao: 'Duplicado', qrcode: '', Status: false}) 
-                const setores = await fetchSetores(this.empresaId)
-                for(const setor of setores) {
-                    await sendDataToSupabase('setor_conexao', {
-                        id_setor: setor.id,
-                        id_conexao: this.clientId,
-                        id_empresa: this.empresaId,
-                        keyConexao: this.key
-                    })
-                }
-            }
-        } else {
-            await updateDataInTable('conexoes', {id: this.clientId}, {status_conexao: 'pronto', Status: true, instance_key: this.key, qrcode: '', Nome: name, 'Número': phone})
-            const setores = await fetchSetores(this.empresaId)
-            for(const setor of setores) {
-                await sendDataToSupabase('setor_conexao', {
-                    id_setor: setor.id,
-                    id_conexao: this.clientId,
-                    id_empresa: this.empresaId,
-                    keyConexao: this.key
-                })
-            }
-        }
-        
     }
 
     getWhatsAppId(id) {
@@ -730,22 +334,30 @@ class WhatsAppInstance {
 
     async getGroups() {
         const data = await this.instance.sock?.groupFetchAllParticipating()
+        return data
+    }
+
+    async sendMessageGroup(group, message) {
+        const groups = await this.getGroups()
 
         let resultado = null
 
-        for(let chave in data) {
-            if (data[chave].subject === 'Arquivos') {
+        for(let chave in groups) {
+            if (groups[chave].subject === group) {
                 resultado = {
-                    name: data[chave].subject,
+                    name: groups[chave].subject,
                     jid: chave
                 }
                 break;
             }
         }
 
-        console.log({resultado})
+        const {jid} = resultado
 
-        return resultado
+        this.instance.sock?.sendMessage(jid, { text: message })
+        
+        return 'Mensagem sendo enviada'
+
     }
 
     async replyMessage(to, message, content) {
