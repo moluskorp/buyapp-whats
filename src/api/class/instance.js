@@ -57,7 +57,7 @@ class WhatsAppInstance {
                 dominio: this.key,
                 qr: this.instance.qr
             })
-            
+
         } else if (value === 'pronto') {
             axios.post(`${this.url}/whatsapp_conectado`, {
                 dominio: this.key
@@ -67,7 +67,7 @@ class WhatsAppInstance {
     }
 
     key = ''
-    url = 'https://transportta.allstark.com.br/api/1.1/wf'
+    url = 'https://transportta.allstark.com.br/version-test/api/1.1/wf'
     name = null
     authState
     allowWebhook = undefined
