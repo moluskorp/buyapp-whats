@@ -5,13 +5,15 @@ const { jidDecode } = require('@whiskeysockets/baileys')
 const { WebSocket } = require('ws')
 
 exports.init = async (req, res) => {
+    console.log('inicio init')
     const key = req.query.key
-
+    console.log('key', key)
     const appUrl = config.appUrl || req.protocol + '://' + req.headers.host
     const instance = new WhatsAppInstance(key)
     const data = await instance.init()
     WhatsAppInstances[data.key] = instance
     const qr = await WhatsAppInstances[req.query.key]?.instance.qr
+    console.log('qr', qr)
     res.json({
         error: false,
         message: 'Initializing successfully',
