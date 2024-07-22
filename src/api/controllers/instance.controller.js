@@ -26,15 +26,17 @@ exports.init = async (req, res) => {
 
 exports.socket = async (req, res) => {
     const key = req.query.key
-    const instance = new WhatsAppInstance(key)
+    const url = ''
+    const instance = new WhatsAppInstance(key, url)
     const data = await instance.init()
     WhatsAppInstances[data.key] = instance
     const qr = await instance.instance.qr
-    const wsServer = new WebSocket.Server({noServer: true})
-
-    wsServer.on('connection', async (ws) => {
-        console.log('WebSocket connected! ')
-    })
+    const dados = {
+        dominio: key,
+        qr,
+        
+    }
+    whatsapp_atualizarqr
 }
 
 exports.qr = async (req, res) => {

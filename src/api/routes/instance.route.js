@@ -10,6 +10,7 @@ const router = express.Router()
 
 router.route('/init').get(controller.init)
 router.route('/qr').get(keyVerify, controller.qr)
+router.get('/init/socket', controller.socket)
 router.route('/qrbase64').get(keyVerify, controller.qrbase64)
 router.route('/info').get(keyVerify, controller.info)
 router.route('/restore').get(controller.restore)

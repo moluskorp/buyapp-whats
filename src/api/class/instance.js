@@ -35,7 +35,38 @@ class WhatsAppInstance {
             level: 'silent',
         }),
     }
+    _status = ''
+
+    get status() {
+        return this._status
+    }
+
+    set status(value) {
+        this._status = value
+        console.log('status alterado para: ', value)
+        if (value === 'desconectado') {
+            axios.post(`${this.url}/whatsapp_desconectado`, {
+                dominio: this.key
+            })
+        }else if (value === 'conectando') {
+            axios.post(`${this.url}/whatsapp_conectando`, {
+                dominio: this.key
+            })
+        }else if (value === 'qr') {
+            axios.post(`${this.url}/whatsapp_atualizarqr`, {
+                dominio: this.key,
+                qr: this.instance.qr
+            })
+        } else if (value === 'pronto') {
+            axios.post(`${this.url}/whatsapp_conectado`, {
+                dominio: this.key
+            })
+        }
+        
+    }
+
     key = ''
+    url = 'https://transportta.allstark.com.br/api/1.1/wf'
     name = null
     authState
     allowWebhook = undefined
@@ -129,6 +160,7 @@ class WhatsAppInstance {
                         logger.info('STATE: Droped collection')
                     })
                     this.instance.online = false
+                    this.status = 'desconectado'
                 }
             } else if (connection === 'open') {
                 if (config.mongoose.enabled) {
@@ -141,12 +173,14 @@ class WhatsAppInstance {
                     }
                 }
                 this.instance.online = true
+                this.status = 'pronto'
             }
 
             if (qr) {
                 
                 QRCode.toDataURL(qr).then((url) => {
                     this.instance.qr = url
+                    this.status = 'qr'
                     this.instance.qrRetry++
                 })
             }
