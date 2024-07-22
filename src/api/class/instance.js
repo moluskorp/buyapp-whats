@@ -55,7 +55,7 @@ class WhatsAppInstance {
         }else if (value === 'qr') {
             axios.post(`${this.url}/whatsapp_atualizarqr`, {
                 dominio: this.key,
-                qr: this.instance.qr
+                qr: this.instance.qr.replace('data:image/png;base64,', '')
             })
 
         } else if (value === 'pronto') {
