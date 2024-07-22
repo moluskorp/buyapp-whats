@@ -57,6 +57,7 @@ class WhatsAppInstance {
                 dominio: this.key,
                 qr: this.instance.qr
             })
+            
         } else if (value === 'pronto') {
             axios.post(`${this.url}/whatsapp_conectado`, {
                 dominio: this.key
