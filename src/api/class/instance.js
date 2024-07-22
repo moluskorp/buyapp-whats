@@ -372,27 +372,28 @@ class WhatsAppInstance {
         return data
     }
 
-    async sendMessageGroup(group, message) {
+    async sendMessageGroup(grupo, message) {
         const groups = await this.getGroups()
 
-        let resultado = null
+        grupo.forEach((group) => {
+            let resultado = null
 
-        for(let chave in groups) {
-            if (groups[chave].subject === group) {
-                resultado = {
-                    name: groups[chave].subject,
-                    jid: chave
+            for(let chave in groups) {
+                if (groups[chave].subject === group) {
+                    resultado = {
+                        name: groups[chave].subject,
+                        jid: chave
+                    }
+                    break;
                 }
-                break;
             }
-        }
 
-        const {jid} = resultado
+            const {jid} = resultado
 
-        this.instance.sock?.sendMessage(jid, { text: message })
+            this.instance.sock?.sendMessage(jid, { text: message })
+        })
         
         return 'Mensagem sendo enviada'
-
     }
 
     async replyMessage(to, message, content) {
