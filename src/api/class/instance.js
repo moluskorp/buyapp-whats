@@ -67,7 +67,7 @@ class WhatsAppInstance {
     }
 
     key = ''
-    url = 'https://transportta.allstark.com.br/version-test/api/1.1/wf'
+    url = 'https://transportta.allstark.com.br/api/1.1/wf'
     name = null
     authState
     allowWebhook = undefined
